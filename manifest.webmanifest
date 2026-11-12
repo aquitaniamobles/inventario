@@ -1,0 +1,16 @@
+{
+  "name": "Inventario Ágil",
+  "short_name": "Inventario",
+  "description": "Inventarios por zonas con pistola de códigos de barras y exportación a Excel.",
+  "lang": "es",
+  "start_url": "./Inventario.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#eef1f5",
+  "theme_color": "#14212f",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
