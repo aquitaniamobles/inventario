@@ -65,6 +65,9 @@ aside{width:300px;min-width:300px;background:var(--panel);border-right:1px solid
 main{flex:1;overflow:auto;padding:18px 22px;min-width:0}
 .empty{max-width:640px;margin:60px auto;text-align:center;color:var(--muted)}
 .empty h2{color:var(--text)}
+.emptyform{display:flex;gap:8px;margin:18px 0;flex-wrap:wrap}
+.emptyform input{flex:1;min-width:0;font-size:18px;padding:12px}
+.emptyform button{padding:12px 16px;font-size:16px}
 .zhead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:12px}
 .ztitle{font-size:26px;font-weight:700}
 .zmeta{color:var(--muted);font-size:14px}
@@ -177,7 +180,8 @@ tr.unk td{background:#fff5f0}
   header.top .save{order:6;margin-left:0;font-size:12px}
   header.top .save small{display:none}
   header.top button{padding:7px 10px}
-  #menuBtn{display:inline-block;font-size:20px;padding:4px 12px}
+  #menuBtn{display:inline-block;font-size:15px;padding:7px 10px;font-weight:700}
+  header.top .brand{font-size:14px}
   .wrap{height:auto;min-height:calc(100% - 100px)}
   aside{position:fixed;left:0;top:0;bottom:0;z-index:60;width:86vw;max-width:340px;min-width:0;transform:translateX(-105%);transition:transform .2s;box-shadow:4px 0 20px rgba(0,0,0,.25)}
   aside.open{transform:none}
@@ -225,7 +229,7 @@ tr.unk td{background:#fff5f0}
 </head>
 <body>
 <header class="top">
-  <button id="menuBtn" title="Zonas y menú">☰</button>
+  <button id="menuBtn" title="Zonas y menú">☰ Zonas</button>
   <div class="brand">📦 Inventario Ágil</div>
   <label>Equipo / persona <input id="device" placeholder="p. ej. Portátil 1 - Ana" autocomplete="off"></label>
   <div id="saveStatus" class="save">Sin cambios</div>
@@ -267,7 +271,8 @@ tr.unk td{background:#fff5f0}
   <main>
     <section id="emptyView" class="empty">
       <h2>Empieza creando una zona o marca</h2>
-      <p>Escribe el nombre a la izquierda (p. ej. <i>Pasillo 3</i>, <i>Almacén</i>, <i>Marca Bosch</i>) y pulsa <b>Crear</b>. Después escanea los productos: cada código se suma en una única línea.</p>
+      <form id="emptyZoneForm" class="emptyform"><input id="emptyZoneName" placeholder="Nombre: Pasillo 3, Almacén, Marca Bosch…" autocomplete="off" enterkeyhint="done"><button class="primary">+ Crear zona</button></form>
+      <p>Después escanea los productos: cada código se suma en una única línea. Las zonas que ya existen están en <b>☰ Zonas</b> (en el ordenador, a la izquierda).</p>
       <p>Todo se guarda solo en este ordenador después de cada escaneo.</p>
     </section>
 
@@ -721,6 +726,7 @@ $('#device').addEventListener('input', e => { S.device = e.target.value; changed
 $('#device').addEventListener('keydown', e => { if (e.key === 'Enter') focusScan(); });
 
 $('#newZoneForm').addEventListener('submit', e => { e.preventDefault(); createZone($('#newZoneName').value); $('#newZoneName').value = ''; });
+$('#emptyZoneForm').addEventListener('submit', e => { e.preventDefault(); const i = $('#emptyZoneName'); i.blur(); createZone(i.value); i.value = ''; });
 $('#zoneList').addEventListener('click', e => { const it = e.target.closest('[data-z]'); if (it){ selectZone(it.dataset.z); closeDrawer(); } });
 // Menú lateral en móvil
 function openDrawer(){ $('#drawer').classList.add('open'); $('#drawerBg').classList.add('open'); }
