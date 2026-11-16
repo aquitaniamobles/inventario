@@ -143,21 +143,100 @@ tr.unk td{background:#fff5f0}
 .maptbl th,.maptbl td{padding:4px 8px;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
 .mapgrid{display:grid;grid-template-columns:230px 1fr;gap:10px 14px;align-items:center}
 .mapgrid .bcs{display:flex;flex-wrap:wrap;gap:4px 14px}
+/* ---- Botón cámara y escáner a pantalla completa ---- */
+#camBtn{background:#14212f;color:#fff;border-color:#14212f;padding:14px 16px;font-weight:700}
+#camBtn:hover{background:#22344a}
+#cam{position:fixed;inset:0;z-index:100;background:#000;display:flex;flex-direction:column;color:#fff}
+.camtop{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:#14212f;font-size:15px}
+.camtop b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.camtop button{background:#cf222e;color:#fff;border-color:#cf222e;font-weight:700;padding:9px 14px}
+#cam > *{min-width:0}
+.camview{position:relative;flex:1;min-height:0;overflow:hidden;background:#000}
+#camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.camframe{position:absolute;left:8%;right:8%;top:32%;bottom:32%;border:3px solid rgba(255,255,255,.9);border-radius:14px;box-shadow:0 0 0 2000px rgba(0,0,0,.35);pointer-events:none}
+.camframe.hit{border-color:#2ea043;box-shadow:0 0 0 2000px rgba(46,160,67,.25)}
+.camline{position:absolute;left:6%;right:6%;top:50%;height:2px;background:#ff4d4d;box-shadow:0 0 8px #ff4d4d}
+.camhint{position:absolute;bottom:10px;left:0;right:0;text-align:center;font-size:13px;color:#ddd;text-shadow:0 1px 3px #000;padding:0 10px}
+#camLast{margin:0;border-radius:0;font-size:17px;min-height:88px}
+#camLast .big{font-size:22px}
+.cambar{display:flex;gap:8px;align-items:center;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:#14212f;flex-wrap:wrap}
+.cambar label{display:flex;align-items:center;gap:6px;font-size:14px}
+.cambar input{width:70px;font-size:20px;text-align:center;padding:8px}
+.cambar button{background:#22344a;color:#fff;border-color:#34506e;padding:11px 14px;font-size:15px}
+.cambar .grow{flex:1}
+#menuBtn,#drawerBg{display:none}
+
+/* ---- Móvil ---- */
+@media (max-width: 760px){
+  body{font-size:16px}
+  input,select,button{font-size:16px}
+  header.top{flex-wrap:wrap;gap:8px;padding:8px 10px}
+  header.top .brand{font-size:16px;flex:1}
+  header.top label{order:5;width:100%;font-size:12px}
+  header.top input{flex:1;width:auto}
+  header.top .save{order:6;margin-left:0;font-size:12px}
+  header.top .save small{display:none}
+  header.top button{padding:7px 10px}
+  #menuBtn{display:inline-block;font-size:20px;padding:4px 12px}
+  .wrap{height:auto;min-height:calc(100% - 100px)}
+  aside{position:fixed;left:0;top:0;bottom:0;z-index:60;width:86vw;max-width:340px;min-width:0;transform:translateX(-105%);transition:transform .2s;box-shadow:4px 0 20px rgba(0,0,0,.25)}
+  aside.open{transform:none}
+  #drawerBg.open{display:block;position:fixed;inset:0;background:rgba(10,20,30,.45);z-index:55}
+  main{padding:12px 10px 40px;overflow:visible}
+  .ztitle{font-size:21px}
+  .zactions{width:100%}
+  .zactions button{flex:1 1 auto;padding:9px 8px;font-size:14px}
+  .scanarea{padding:10px;border-width:2px}
+  .scanrow{gap:8px}
+  .field.grow{min-width:0;flex:1 1 100%}
+  header.top .hm{display:none}
+  header.top label{order:5;flex:1 1 60%}
+  header.top .save{order:6}
+  #scan{font-size:20px;padding:10px}
+  #qty{width:80px;font-size:20px;padding:10px 6px}
+  #camBtn{order:0;flex:1 1 100%;font-size:18px;padding:16px}
+  .chk{padding-bottom:12px}
+  #undoBtn{padding:12px}
+  .last{font-size:16px}
+  .last .big{font-size:21px}
+  .tools #search{flex:1;width:auto;min-width:0}
+  .tools select{flex:1}
+  details.manual{width:100%}
+  #manualForm{flex-wrap:wrap} #mCode{flex:1;width:auto;min-width:0}
+  .count{margin-left:0;width:100%}
+  /* tabla en formato tarjetas */
+  .tablewrap thead{display:none}
+  .tablewrap table,.tablewrap tbody{display:block;width:100%}
+  .tablewrap tr{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:10px 12px;border-bottom:1px solid #edf0f3}
+  .tablewrap td{border:0;padding:0}
+  td.num,td.sm{display:none}
+  td.code{grid-column:1;font-size:15px;word-break:break-all}
+  td.desc{grid-column:1;max-width:none}
+  td.q{grid-column:2;grid-row:1 / span 2;align-self:center;font-size:24px;width:auto;padding:4px 8px;border-radius:8px}
+  td.act{grid-column:1 / -1;text-align:left;padding-top:8px;white-space:normal;width:auto}
+  td.act button{padding:8px 13px;font-size:15px;margin:2px 2px 0 0}
+  td.zones-cell{grid-column:1 / -1}
+  td.noitems{grid-column:1 / -1}
+  .mapgrid{grid-template-columns:1fr}
+  dialog .db{padding:12px}
+}
 .trash-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #edf0f3}
 </style>
 </head>
 <body>
 <header class="top">
+  <button id="menuBtn" title="Zonas y menú">☰</button>
   <div class="brand">📦 Inventario Ágil</div>
   <label>Equipo / persona <input id="device" placeholder="p. ej. Portátil 1 - Ana" autocomplete="off"></label>
   <div id="saveStatus" class="save">Sin cambios</div>
   <button id="saveBtn" class="savebtn" title="Guardar ahora (Ctrl+S)">💾 Guardar</button>
   <button id="installBtn" hidden title="Instalar como aplicación en este ordenador">⬇ Instalar app</button>
-  <button id="helpBtn">? Ayuda</button>
+  <button id="helpBtn">?<span class="hm"> Ayuda</span></button>
 </header>
 <div id="tabWarn">⚠ La aplicación está abierta en otra pestaña o ventana de este mismo ordenador. Cierra las demás y trabaja solo en una para no perder escaneos.</div>
 <div class="wrap">
-  <aside>
+  <div id="drawerBg"></div>
+  <aside id="drawer">
     <div class="side-h">Zonas / marcas</div>
     <form id="newZoneForm"><input id="newZoneName" placeholder="Nueva zona o marca…" autocomplete="off"><button class="primary">+ Crear</button></form>
     <div id="zoneList"></div>
@@ -209,6 +288,7 @@ tr.unk td{background:#fff5f0}
 
       <div id="scanArea" class="scanarea">
         <div class="scanrow">
+          <button id="camBtn" title="Leer códigos de barras con la cámara">📷 Escanear con cámara</button>
           <div class="field grow"><label for="scan">Código de barras (escanea aquí)</label><input id="scan" autocomplete="off" spellcheck="false"></div>
           <div class="field"><label for="qty">Cantidad</label><input id="qty" value="1" inputmode="decimal" autocomplete="off"></div>
           <label class="chk"><input type="checkbox" id="fixQty"> Fijar cantidad</label>
@@ -236,6 +316,22 @@ tr.unk td{background:#fff5f0}
 </div>
 <div id="toast"></div>
 
+<div id="cam" hidden>
+  <div class="camtop"><b>📷 <span id="camZone"></span></b><button id="camClose">✕ Cerrar</button></div>
+  <div class="camview">
+    <video id="camVideo" playsinline muted autoplay></video>
+    <div class="camframe" id="camFrame"><div class="camline"></div></div>
+    <div class="camhint" id="camHint">Pon el código de barras dentro del recuadro</div>
+  </div>
+  <div id="camLast" class="last">Apunta al código de barras…</div>
+  <div class="cambar">
+    <label>Cant. <input id="camQty" value="1" inputmode="decimal" autocomplete="off"></label>
+    <button id="camAgain" class="grow" disabled title="Vuelve a sumar el último código leído">+ Otra vez</button>
+    <button id="camUndo" title="Deshacer el último">↶</button>
+    <button id="camTorch" hidden title="Linterna">🔦</button>
+  </div>
+</div>
+
 <dialog id="helpDlg">
   <div class="dh">Cómo se usa <button data-close>Cerrar</button></div>
   <div class="db">
@@ -244,6 +340,7 @@ tr.unk td{background:#fff5f0}
       <li>Crea una <b>zona o marca</b> y selecciónala.</li>
       <li>Escanea con la pistola. Si el recuadro está en <b style="color:var(--ok)">verde</b>, está listo. Si está en <b style="color:var(--bad)">rojo</b>, haz clic en la casilla del código.</li>
       <li>Si escaneas un producto que ya estaba, <b>se suma en la misma línea</b> y verás el aviso amarillo <i>“YA ESTABA”</i> con la nueva cantidad (y un pitido doble).</li>
+      <li><b>Con el móvil o la tablet:</b> pulsa <b>📷 Escanear con cámara</b> y apunta al código. Cada código se suma una vez; para contar otra unidad del mismo producto, aparta la cámara un par de segundos o pulsa <b>+ Otra vez</b>. Las zonas y el menú están en el botón <b>☰</b>.</li>
       <li>Para contar varias unidades de golpe: escribe la cantidad en <b>Cantidad</b> y luego escanea. También puedes escanear o escribir <kbd>*12</kbd> en la casilla del código: el próximo escaneo contará 12.</li>
       <li>¿Te has equivocado? <kbd>Ctrl</kbd>+<kbd>Z</kbd> o el botón <b>Deshacer</b>. Para corregir una cantidad, haz clic sobre ella en la tabla. Para restar, usa <b>−1</b> o una cantidad negativa (p. ej. <kbd>-2</kbd>).</li>
       <li><b>Catálogo de productos:</b> carga el Excel de productos en stock (columna A = código ERP y, en otra columna, el código de barras del proveedor). Al escanear un código de proveedor se apunta directamente el código ERP y verás el aviso 🔁. Si un código no está en el catálogo, sale en <b style="color:var(--bad)">rojo</b>: pulsa <b>🔗 Asignar</b> en esa línea para decirle su código ERP y la app lo recordará. El catálogo se carga una vez en cada portátil.</li>
@@ -418,7 +515,9 @@ function addScan(raw, qty, manual){
   beep(rep ? 'rep' : 'new');
 }
 function fail(msg){ showLast('err', esc(msg)); beep('err'); }
-function showLast(cls, html){ const el = $('#last'); el.className = 'last ' + cls; el.innerHTML = html; }
+function showLast(cls, html){
+  for (const el of [$('#last'), $('#camLast')]){ el.className = 'last ' + cls; el.innerHTML = html; }
+}
 function resetLast(){ showLast('', 'Esperando el primer escaneo…'); }
 
 function setItemQty(code, q, label){
@@ -562,12 +661,19 @@ function renderTable(flashCode){
 
 /* ================= Foco del escáner ================= */
 const scan = $('#scan');
-function focusScan(){ if (activeZone() && !document.querySelector('dialog[open]')) scan.focus(); }
+// En móvil/tablet no forzamos el foco: abriría el teclado en pantalla a cada toque
+const TOUCH = matchMedia('(pointer: coarse)').matches;
+const camOpen = () => !$('#cam').hidden;
+function focusScan(force){
+  if (TOUCH && !force) return;
+  if (activeZone() && !document.querySelector('dialog[open]') && !camOpen()) scan.focus();
+}
 function updateFocus(){
   const area = $('#scanArea'), z = activeZone(); if (!z) return;
   area.classList.remove('ready', 'notready');
   if (z.done){ $('#focusWarn').textContent = '🔒 Zona terminada: no se puede escanear. Pulsa "Reabrir zona" si necesitas añadir algo.'; return; }
   const ok = document.activeElement === scan;
+  if (TOUCH && !ok){ $('#focusWarn').textContent = '📷 Pulsa «Escanear con cámara». Si usas una pistola Bluetooth, toca antes la casilla del código.'; return; }
   area.classList.add(ok ? 'ready' : 'notready');
   $('#focusWarn').textContent = ok ? '● LISTO PARA ESCANEAR' : '● NO LISTO — haz clic en la casilla del código antes de escanear';
 }
@@ -604,8 +710,8 @@ document.addEventListener('keydown', e => {
     if (!inText || (ae === scan && !scan.value)){ e.preventDefault(); undo(); }
     return;
   }
-  if (!inText && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey && activeZone() && !document.querySelector('dialog[open]') && ae.tagName !== 'SELECT'){
-    scan.focus();
+  if (!inText && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey && activeZone() && !document.querySelector('dialog[open]') && !camOpen() && ae.tagName !== 'SELECT'){
+    scan.focus();   // también en móvil: una pistola Bluetooth escribe como un teclado
   }
 });
 
@@ -615,7 +721,13 @@ $('#device').addEventListener('input', e => { S.device = e.target.value; changed
 $('#device').addEventListener('keydown', e => { if (e.key === 'Enter') focusScan(); });
 
 $('#newZoneForm').addEventListener('submit', e => { e.preventDefault(); createZone($('#newZoneName').value); $('#newZoneName').value = ''; });
-$('#zoneList').addEventListener('click', e => { const it = e.target.closest('[data-z]'); if (it) selectZone(it.dataset.z); });
+$('#zoneList').addEventListener('click', e => { const it = e.target.closest('[data-z]'); if (it){ selectZone(it.dataset.z); closeDrawer(); } });
+// Menú lateral en móvil
+function openDrawer(){ $('#drawer').classList.add('open'); $('#drawerBg').classList.add('open'); }
+function closeDrawer(){ $('#drawer').classList.remove('open'); $('#drawerBg').classList.remove('open'); }
+$('#menuBtn').addEventListener('click', openDrawer);
+$('#drawerBg').addEventListener('click', closeDrawer);
+$('#newZoneForm').addEventListener('submit', () => setTimeout(closeDrawer, 0));
 
 $('#zRename').addEventListener('click', () => {
   const z = activeZone(); if (!z) return;
@@ -709,6 +821,7 @@ $('#trashList').addEventListener('click', e => {
 /* ================= Sonido y avisos ================= */
 let actx = null;
 function beep(kind){
+  try{ navigator.vibrate && navigator.vibrate(kind === 'new' ? 70 : kind === 'rep' ? [50, 70, 50] : [250, 80, 250]); }catch(e){}
   if (!S.opts.sound) return;
   try{
     actx = actx || new (window.AudioContext || window.webkitAudioContext)();
@@ -803,7 +916,15 @@ function buildXlsx(sheets){
 const safe = s => String(s).replace(/[\\\/:*?"<>|]+/g, '-').replace(/\s+/g, '_').trim().slice(0, 60) || 'sin_nombre';
 function stamp(){ const d = new Date(), p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`; }
 const devPart = () => S.device.trim() ? '_' + safe(S.device) : '';
-function download(bytes, name, type){
+const IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+async function download(bytes, name, type){
+  // En iPhone/iPad las descargas desde una app instalada fallan: se usa "Compartir" (Guardar en Archivos, correo, WhatsApp…)
+  if (IOS && navigator.canShare){
+    try{
+      const file = new File([bytes], name, {type});
+      if (navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:name}); return; }
+    }catch(e){ if (e && e.name === 'AbortError') return; }
+  }
   const url = URL.createObjectURL(new Blob([bytes], {type}));
   const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 5000);
@@ -1156,7 +1277,126 @@ function linkUnknown(code){
   beep('new');
 }
 
+/* ================= Escáner con cámara (móvil, tablet o webcam) ================= */
+const CAM = {stream:null, track:null, timer:null, detector:null, zx:null, torch:false, canvas:document.createElement('canvas'), last:{code:null, seen:0}, lastAdded:null};
+const CAM_GAP = 2500;   // el mismo código seguido delante de la cámara solo cuenta una vez
+const BD_FORMATS = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'code_93', 'itf', 'codabar', 'qr_code', 'data_matrix'];
+function loadZxing(){
+  if (window.ZXing) return Promise.resolve();
+  return new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = 'zxing.min.js';
+    s.onload = res; s.onerror = () => rej(new Error('No se ha podido cargar el lector de códigos (zxing.min.js).'));
+    document.head.appendChild(s);
+  });
+}
+async function setupDecoder(){
+  if (CAM.detector || CAM.zx) return;
+  if ('BarcodeDetector' in window){
+    try{
+      const sup = await BarcodeDetector.getSupportedFormats(), f = BD_FORMATS.filter(x => sup.includes(x));
+      if (f.includes('ean_13') && f.includes('code_128')){ CAM.detector = new BarcodeDetector({formats:f}); return; }
+    }catch(e){}
+  }
+  await loadZxing();
+  const Z = window.ZXing, F = Z.BarcodeFormat, hints = new Map();
+  hints.set(Z.DecodeHintType.POSSIBLE_FORMATS, [F.EAN_13, F.EAN_8, F.UPC_A, F.UPC_E, F.CODE_128, F.CODE_39, F.CODE_93, F.ITF, F.CODABAR, F.QR_CODE, F.DATA_MATRIX]);
+  hints.set(Z.DecodeHintType.TRY_HARDER, true);
+  CAM.zx = new Z.MultiFormatReader(); CAM.zx.setHints(hints);
+}
+function zxDecodeCanvas(canvas){
+  const Z = window.ZXing;
+  try{ return CAM.zx.decodeWithState(new Z.BinaryBitmap(new Z.HybridBinarizer(new Z.HTMLCanvasElementLuminanceSource(canvas)))).getText(); }
+  catch(e){ return null; }
+}
+async function camTick(){
+  if (!camOpen() || !CAM.stream) return;
+  const v = $('#camVideo'); let code = null;
+  try{
+    if (v.readyState >= 2 && v.videoWidth){
+      if (CAM.detector){ const r = await CAM.detector.detect(v); if (r.length) code = r[0].rawValue; }
+      else {
+        // Se analiza la franja central (donde está el recuadro), reducida para ir rápido
+        const vw = v.videoWidth, vh = v.videoHeight, sx = vw * .04, sy = vh * .25, sw = vw * .92, sh = vh * .5;
+        const k = Math.min(1, 1000 / sw), c = CAM.canvas;
+        c.width = Math.round(sw * k); c.height = Math.round(sh * k);
+        c.getContext('2d', {willReadFrequently:true}).drawImage(v, sx, sy, sw, sh, 0, 0, c.width, c.height);
+        code = zxDecodeCanvas(c);
+      }
+    }
+  }catch(e){ console.warn(e); }
+  if (code) onCamCode(String(code).trim());
+  CAM.timer = setTimeout(camTick, CAM.detector ? 80 : 110);
+}
+function onCamCode(code){
+  if (!code) return;
+  const t = now();
+  if (code === CAM.last.code && t - CAM.last.seen < CAM_GAP){ CAM.last.seen = t; return; }
+  CAM.last = {code, seen:t};
+  const q = parseQty($('#camQty').value);
+  if (!isFinite(q) || q === 0){ fail('La cantidad no es válida.'); return; }
+  addScan(code, q, false);
+  CAM.lastAdded = code; $('#camAgain').disabled = false;
+  if (!$('#fixQty').checked) $('#camQty').value = '1';
+  const fr = $('#camFrame'); fr.classList.add('hit'); setTimeout(() => fr.classList.remove('hit'), 450);
+}
+async function openCam(){
+  const z = activeZone(); if (!guard(z)) return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    alert('Este navegador no permite usar la cámara aquí. Abre la app desde https://aquitaniamobles.github.io/inventario/ con Chrome (Android) o Safari (iPhone).'); return;
+  }
+  try{ actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume && actx.resume(); }catch(e){}
+  $('#camZone').textContent = z.name;
+  $('#camQty').value = $('#qty').value || '1';
+  showLast('', 'Apunta al código de barras…');
+  $('#camAgain').disabled = true; CAM.last = {code:null, seen:0}; CAM.lastAdded = null;
+  $('#cam').hidden = false; document.body.style.overflow = 'hidden'; closeDrawer();
+  if (document.activeElement) document.activeElement.blur();
+  try{
+    $('#camHint').textContent = 'Abriendo la cámara…';
+    CAM.stream = await navigator.mediaDevices.getUserMedia({audio:false, video:{facingMode:{ideal:'environment'}, width:{ideal:1920}, height:{ideal:1080}}});
+    if (!camOpen()){ CAM.stream.getTracks().forEach(t => t.stop()); CAM.stream = null; return; }
+    const v = $('#camVideo'); v.srcObject = CAM.stream; await v.play().catch(() => {});
+    CAM.track = CAM.stream.getVideoTracks()[0];
+    const caps = CAM.track.getCapabilities ? CAM.track.getCapabilities() : {};
+    $('#camTorch').hidden = !caps.torch; CAM.torch = false;
+    if (caps.focusMode && caps.focusMode.includes('continuous')) CAM.track.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(() => {});
+    $('#camHint').textContent = 'Preparando el lector…';
+    await setupDecoder();
+    $('#camHint').textContent = 'Pon el código de barras dentro del recuadro, a unos 15–25 cm';
+    camTick();
+  }catch(e){
+    console.error(e); closeCam();
+    alert(e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')
+      ? 'No hay permiso para usar la cámara. Permítelo (candado de la barra de direcciones, o Ajustes del móvil → navegador → Cámara) y vuelve a intentarlo.'
+      : e && e.name === 'NotFoundError' ? 'No se ha encontrado ninguna cámara en este dispositivo.'
+      : 'No se ha podido abrir la cámara: ' + (e && e.message || e));
+  }
+}
+function closeCam(){
+  clearTimeout(CAM.timer);
+  if (CAM.stream) CAM.stream.getTracks().forEach(t => t.stop());
+  CAM.stream = null; CAM.track = null; $('#camVideo').srcObject = null;
+  $('#cam').hidden = true; document.body.style.overflow = '';
+  renderTable(); updateFocus();
+}
+$('#camBtn').addEventListener('click', openCam);
+$('#camClose').addEventListener('click', closeCam);
+$('#camAgain').addEventListener('click', () => {
+  if (!CAM.lastAdded) return;
+  const q = parseQty($('#camQty').value);
+  addScan(CAM.lastAdded, isFinite(q) && q ? q : 1, false);
+  if (!$('#fixQty').checked) $('#camQty').value = '1';
+});
+$('#camUndo').addEventListener('click', () => { undo(); CAM.last = {code:null, seen:0}; });
+$('#camTorch').addEventListener('click', () => {
+  if (!CAM.track) return; CAM.torch = !CAM.torch;
+  CAM.track.applyConstraints({advanced:[{torch:CAM.torch}]}).catch(() => toast('La linterna no está disponible'));
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden && camOpen()) closeCam(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && camOpen()) closeCam(); });
+
 /* ================= Inicio ================= */
+if (!window.showSaveFilePicker) $('#fileBackupBtn').hidden = true;   // no existe en móviles ni en Safari/Firefox
 if (!S.active && S.zones.length) S.active = S.zones[S.zones.length - 1].id;
 renderCatBox();
 render();
