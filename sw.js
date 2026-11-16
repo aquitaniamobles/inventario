@@ -1,8 +1,8 @@
 // Service worker: permite instalar la app y abrirla sin internet.
 // Con internet siempre carga la última versión; sin internet usa la copia guardada.
-// Los datos del inventario NO pasan por aquí: se guardan en el navegador del ordenador.
-const CACHE = 'inventario-agil-v2';
-const FILES = ['./', './Inventario.html', './manifest.webmanifest', './zxing.min.js', './icon-192.png', './icon-512.png', './icon-512-maskable.png'];
+// Las llamadas al servidor (Supabase) no pasan por aquí.
+const CACHE = 'inventario-agil-v3';
+const FILES = ['./', './Inventario.html', './manifest.webmanifest', './supabase.js', './zxing.min.js', './icon-192.png', './icon-512.png', './icon-512-maskable.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

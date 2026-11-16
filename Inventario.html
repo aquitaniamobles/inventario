@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Inventario Ágil</title>
 <meta name="theme-color" content="#14212f">
 <link rel="manifest" href="manifest.webmanifest">
@@ -10,316 +10,411 @@
 <link rel="apple-touch-icon" href="icon-192.png">
 <style>
 :root{
-  --bg:#eef1f5; --panel:#ffffff; --panel2:#f6f8fa; --line:#d5dbe3; --text:#17202a; --muted:#5f6b78;
+  --bg:#eef1f5; --panel:#fff; --panel2:#f6f8fa; --line:#d5dbe3; --line2:#edf0f3; --text:#17202a; --muted:#5f6b78;
   --accent:#1f6feb; --accent-soft:#e3edff; --ok:#1a7f37; --ok-soft:#dcf5e3; --rep:#9a6700; --rep-soft:#fff3c4;
-  --bad:#cf222e; --bad-soft:#ffe3e5;
+  --bad:#cf222e; --bad-soft:#ffe3e5; --navy:#14212f; --navy2:#22344a;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--text);font:15px/1.4 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
-button,input,select{font:inherit}
-button{cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:8px;padding:7px 12px}
-button:hover{border-color:#a9b4c2;background:var(--panel2)}
-button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-button.primary:hover{background:#1a5fd0}
-button.danger{color:var(--bad);border-color:#f0b4b8}
-button.danger:hover{background:var(--bad-soft)}
+html,body{margin:0;min-height:100%}
+body{background:var(--bg);color:var(--text);font:16px/1.4 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit;font-size:16px}
+button{cursor:pointer;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:10px;padding:9px 14px}
+button:hover{border-color:#a9b4c2}
 button:disabled{opacity:.5;cursor:not-allowed}
-input[type=text],input:not([type]),select{border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:#fff;color:var(--text)}
+button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
+button.dark{background:var(--navy);color:#fff;border-color:var(--navy)}
+button.danger{color:var(--bad);border-color:#f0b4b8;background:#fff}
+button.link{border:0;background:none;color:var(--accent);padding:6px 4px}
+button.big{font-size:19px;font-weight:700;padding:16px 18px;width:100%}
+input:not([type=checkbox]),select{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff;color:var(--text);min-width:0}
 input:focus,select:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+.muted{color:var(--muted)} .small{font-size:13px}
+.mono{font-family:Consolas,"Cascadia Mono",ui-monospace,monospace}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--panel2);color:var(--muted);vertical-align:middle;white-space:nowrap}
+.b-ok{background:var(--ok-soft);color:var(--ok)} .b-rep{background:var(--rep-soft);color:var(--rep)} .b-bad{background:var(--bad-soft);color:var(--bad)} .b-blue{background:var(--accent-soft);color:var(--accent)} .b-m{background:#efe6ff;color:#6639ba}
 
-header.top{display:flex;align-items:center;gap:16px;padding:10px 18px;background:#14212f;color:#fff}
-header.top .brand{font-weight:700;font-size:18px;white-space:nowrap}
-header.top label{display:flex;align-items:center;gap:8px;color:#b9c6d4;font-size:13px}
-header.top input{background:#22344a;border-color:#34506e;color:#fff;width:220px}
-header.top .save{margin-left:auto;font-size:13px;padding:4px 10px;border-radius:20px;background:#22344a;white-space:nowrap}
-header.top .save.ok{color:#7ee2a0}
-header.top .save.bad{background:var(--bad);color:#fff;font-weight:700}
-header.top button{background:#22344a;color:#fff;border-color:#34506e}
-header.top button.savebtn{background:#1a7f37;border-color:#1a7f37;font-weight:700}
-header.top button.savebtn:hover{background:#156c2e}
-header.top #installBtn{background:var(--accent);border-color:var(--accent)}
-header.top .save small{opacity:.75}
+/* ---------- Acceso ---------- */
+.auth{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,#14212f,#22344a)}
+.authcard{background:#fff;border-radius:18px;padding:26px 22px;width:100%;max-width:380px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.authcard img{width:64px;height:64px;display:block;margin:0 auto 8px;border-radius:14px}
+.authcard h1{text-align:center;font-size:22px;margin:0 0 4px}
+.authcard p.sub{text-align:center;color:var(--muted);margin:0 0 18px;font-size:14px}
+.authcard label{display:block;font-size:13px;font-weight:700;color:var(--muted);margin:12px 0 4px}
+.authcard input{width:100%;font-size:20px;padding:12px}
+.authcard input.pin{letter-spacing:.4em;text-align:center}
+.authcard button.big{margin-top:18px}
+.err{color:var(--bad);font-weight:600;font-size:14px;margin-top:10px;min-height:20px}
 
-.wrap{display:flex;height:calc(100% - 56px)}
-aside{width:300px;min-width:300px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow:auto}
-.side-h{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700;padding:14px 14px 6px}
-#newZoneForm{display:flex;gap:6px;padding:0 14px 10px}
-#newZoneForm input{flex:1;min-width:0}
-#zoneList{padding:0 8px}
-.zitem{padding:9px 10px;border-radius:8px;cursor:pointer;border:1px solid transparent;margin-bottom:2px}
-.zitem:hover{background:var(--panel2)}
-.zitem.on{background:var(--accent-soft);border-color:#9ec1ff}
-.zitem .zn{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.zitem .zs{font-size:12px;color:var(--muted)}
-.zitem.total{border-bottom:1px dashed var(--line);border-radius:8px 8px 0 0;margin-bottom:6px}
-.zitem.done .zn{color:var(--muted)}
-.badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:10px;background:var(--ok-soft);color:var(--ok);vertical-align:middle}
-.badge.m{background:#efe6ff;color:#6639ba}
-.side-actions{display:flex;flex-direction:column;gap:6px;padding:0 14px 16px}
-.side-actions button{text-align:left}
-.side-actions hr{border:0;border-top:1px solid var(--line);margin:6px 0;width:100%}
-.zempty{color:var(--muted);font-size:13px;padding:6px 10px}
+/* ---------- Estructura ---------- */
+header.top{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:10px;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top));background:var(--navy);color:#fff}
+header.top .brand{font-weight:800;font-size:17px;white-space:nowrap;display:flex;align-items:center;gap:8px}
+header.top .brand img{width:26px;height:26px;border-radius:6px}
+.pill{font-size:13px;padding:5px 10px;border-radius:20px;background:var(--navy2);white-space:nowrap}
+.pill.on{color:#7ee2a0} .pill.off{color:#ffb86b} .pill.busy{color:#9ec1ff}
+header.top .sp{flex:1}
+header.top button{background:var(--navy2);color:#fff;border-color:#34506e;padding:7px 12px}
+nav.tabs{position:sticky;top:calc(54px + env(safe-area-inset-top));z-index:25;display:flex;gap:4px;overflow-x:auto;background:#fff;border-bottom:1px solid var(--line);padding:6px 10px}
+nav.tabs button{border:0;background:none;border-radius:8px;padding:9px 12px;white-space:nowrap;color:var(--muted);font-weight:600}
+nav.tabs button.on{background:var(--accent-soft);color:var(--accent)}
+main{max-width:920px;margin:0 auto;padding:16px 14px 110px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row > .grow{flex:1;min-width:0}
+h2{font-size:22px;margin:4px 0 12px}
+h3{font-size:16px;margin:18px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.notice{border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:14px}
+.notice.warn{background:var(--rep-soft);color:#6b4700}
+.notice.info{background:var(--accent-soft);color:#16408f}
+.notice.bad{background:var(--bad-soft);color:var(--bad)}
 
-main{flex:1;overflow:auto;padding:18px 22px;min-width:0}
-.empty{max-width:640px;margin:60px auto;text-align:center;color:var(--muted)}
-.empty h2{color:var(--text)}
-.emptyform{display:flex;gap:8px;margin:18px 0;flex-wrap:wrap}
-.emptyform input{flex:1;min-width:0;font-size:18px;padding:12px}
-.emptyform button{padding:12px 16px;font-size:16px}
-.zhead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:12px}
-.ztitle{font-size:26px;font-weight:700}
-.zmeta{color:var(--muted);font-size:14px}
-.zactions{display:flex;gap:8px;flex-wrap:wrap}
+/* ---------- Mis zonas ---------- */
+.newzone{display:flex;gap:8px;margin-bottom:16px}
+.newzone input{flex:1;font-size:18px;padding:13px}
+.newzone button{font-weight:700;padding:13px 16px}
+.zcard{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;cursor:pointer}
+.zcard:hover{border-color:#9ec1ff}
+.zcard .zi{font-size:26px}
+.zcard .zn{font-weight:700;font-size:17px}
+.zcard .zs{font-size:13px;color:var(--muted)}
+.zcard .grow{flex:1;min-width:0}
+.empty{text-align:center;color:var(--muted);padding:30px 10px}
 
-.scanarea{background:var(--panel);border:3px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px}
-.scanarea.ready{border-color:var(--ok)}
-.scanarea.notready{border-color:var(--bad)}
-.scanarea.locked{border-color:var(--line);opacity:.85}
-.scanrow{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
-.field label{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:3px}
-.field.grow{flex:1;min-width:260px}
-#scan{width:100%;font-size:26px;padding:10px 14px;font-family:Consolas,"Cascadia Mono",monospace;letter-spacing:.03em}
-#qty{width:110px;font-size:26px;padding:10px;text-align:center}
-.chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);padding-bottom:14px}
-#undoBtn{padding:14px 14px}
-.focuswarn{margin-top:8px;font-weight:700;font-size:14px}
-.ready .focuswarn{color:var(--ok)}
-.notready .focuswarn{color:var(--bad)}
-.locked .focuswarn{color:var(--muted)}
-.last{margin-top:10px;padding:12px 14px;border-radius:10px;font-size:20px;background:var(--panel2);color:var(--muted)}
-.last b{font-family:Consolas,"Cascadia Mono",monospace}
+/* ---------- Zona ---------- */
+.zhead{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.zhead .zt{font-size:22px;font-weight:800;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zstats{color:var(--muted);font-size:14px;margin:-4px 0 12px}
+#camBtn{font-size:20px;padding:18px}
+.scanbox{background:#fff;border:2px solid var(--line);border-radius:14px;padding:12px;margin:12px 0}
+.scanbox.ready{border-color:var(--ok)}
+.scanbox label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px}
+#scan{width:100%;font-size:20px;padding:11px}
+#qty{width:84px;font-size:20px;padding:11px 6px;text-align:center}
+.scanhint{font-size:13px;color:var(--muted);margin-top:6px}
+.last{padding:12px 14px;border-radius:12px;font-size:16px;background:var(--panel2);color:var(--muted);margin-bottom:12px}
+.last .big{font-size:22px;font-weight:800}
+.last .desc{font-weight:600;margin-top:2px}
+.last .via{font-size:14px;margin-top:4px}
 .last.new{background:var(--ok-soft);color:#0f5323}
 .last.rep{background:var(--rep-soft);color:#6b4700}
-.last.err{background:var(--bad-soft);color:var(--bad);font-weight:700}
-.last .big{font-size:28px;font-weight:800}
+.last.err{background:var(--bad-soft);color:var(--bad)}
+.tools{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.tools input{flex:1;min-width:120px}
+.items{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.it{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:11px 14px;border-bottom:1px solid var(--line2)}
+.it:last-child{border-bottom:0}
+.it .c{font-family:Consolas,"Cascadia Mono",ui-monospace,monospace;font-size:15px;word-break:break-all}
+.it .d{font-size:14px;color:#33404d}
+.it .q{grid-column:2;grid-row:1 / span 2;align-self:center;font-size:24px;font-weight:800;padding:2px 10px;border-radius:8px;cursor:pointer;text-align:right}
+.it .q:hover{background:var(--accent-soft)}
+.it .q input{width:90px;font-size:20px;text-align:right;padding:4px 6px}
+.it .a{grid-column:1 / -1;display:flex;gap:6px;padding-top:6px;flex-wrap:wrap}
+.it .a button{padding:7px 13px;font-size:15px}
+.it.flash{animation:flash 1.6s ease-out}
+@keyframes flash{0%{background:#ffe98a}100%{background:#fff}}
+.finish{position:fixed;left:0;right:0;bottom:0;z-index:20;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(238,241,245,.96);border-top:1px solid var(--line)}
+.finish .in{max-width:920px;margin:0 auto}
 
-.tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
-#search{width:240px}
-details.manual{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:4px 10px}
-details.manual summary{cursor:pointer;font-weight:600;padding:3px 0}
-#manualForm{display:flex;gap:6px;padding:6px 0}
-#mCode{width:200px} #mQty{width:80px}
-.count{margin-left:auto;color:var(--muted);font-size:13px}
+/* ---------- Admin ---------- */
+.subcard{display:grid;grid-template-columns:auto 1fr auto;gap:4px 12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+.subcard input[type=checkbox]{width:22px;height:22px}
+.subcard .t{font-weight:700}
+.subcard .m{font-size:13px;color:var(--muted)}
+.subcard .a{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.subcard .a button{padding:7px 11px;font-size:14px}
+.bulk{position:sticky;top:calc(104px + env(safe-area-inset-top));z-index:15;background:var(--bg);padding:8px 0;display:flex;gap:6px;flex-wrap:wrap}
+.bulk button{font-size:14px;padding:8px 11px}
+.urow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+.urow .grow{flex:1;min-width:160px}
+.urow button{font-size:14px;padding:7px 11px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-grid label{font-size:13px;font-weight:700;color:var(--muted);display:block;margin-bottom:3px}
+.form-grid input,.form-grid select{width:100%}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:15px}
+.kv b{color:var(--muted);font-weight:600}
 
-.tablewrap{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-table{width:100%;border-collapse:collapse}
-th,td{padding:7px 12px;border-bottom:1px solid #edf0f3;text-align:left}
-th{background:var(--panel2);font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);position:sticky;top:0}
-td.code{font-family:Consolas,"Cascadia Mono",monospace;font-size:16px}
-td.q{font-size:18px;font-weight:700;cursor:pointer;text-align:right;width:110px}
-th.q{text-align:right}
-td.q:hover{background:var(--accent-soft)}
-td.num{color:var(--muted);width:50px}
-td.sm{color:var(--muted);font-size:13px}
-td.act{white-space:nowrap;text-align:right;width:1%}
-td.act button{padding:3px 9px;font-size:13px}
-td.q input{width:90px;font-size:17px;text-align:right;padding:3px 6px}
-tr.flash td{animation:flash 1.6s ease-out}
-@keyframes flash{0%{background:#ffe98a}100%{background:transparent}}
-.zones-cell{font-size:13px;color:var(--muted)}
-.noitems{padding:30px;text-align:center;color:var(--muted)}
-
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#14212f;color:#fff;padding:10px 18px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50;max-width:80vw}
-#toast.show{opacity:1}
-#tabWarn{display:none;background:var(--bad);color:#fff;padding:8px 18px;font-weight:700}
-
-dialog{border:1px solid var(--line);border-radius:12px;padding:0;max-width:640px;width:92vw;color:var(--text)}
-dialog::backdrop{background:rgba(10,20,30,.45)}
-dialog .dh{padding:14px 18px;border-bottom:1px solid var(--line);font-weight:700;font-size:17px;display:flex;justify-content:space-between;align-items:center}
-dialog .db{padding:14px 18px;max-height:70vh;overflow:auto}
-dialog .db li{margin-bottom:6px}
-dialog kbd{background:var(--panel2);border:1px solid var(--line);border-radius:4px;padding:0 5px;font-family:Consolas,monospace}
-.opt{display:flex;gap:8px;align-items:flex-start;margin-bottom:12px}
-.badge.u{background:var(--bad-soft);color:var(--bad)}
-.last.unk{background:#ffe0cc;color:#8a2c00}
-.last .via{font-size:15px;margin-top:4px}
-.last .desc{font-size:17px;font-weight:600;margin-top:2px}
-td.desc{font-size:13px;color:#33404d;max-width:340px}
-tr.unk td{background:#fff5f0}
-.catbox{margin:0 14px 8px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--panel2);font-size:13px}
-.catbox.on{border-color:#9ad3a8;background:var(--ok-soft)}
-.catbox .ct{font-weight:700;margin-bottom:4px}
+/* ---------- Diálogos ---------- */
+dialog{border:0;border-radius:16px;padding:0;max-width:640px;width:94vw;color:var(--text);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+dialog::backdrop{background:rgba(10,20,30,.55)}
+dialog .dh{padding:14px 16px;border-bottom:1px solid var(--line);font-weight:800;font-size:17px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+dialog .db{padding:14px 16px;max-height:72vh;overflow:auto}
+dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+#unkDlg .db input{width:100%;font-size:22px;padding:12px}
+.res{display:flex;justify-content:space-between;gap:10px;padding:10px;border-bottom:1px solid var(--line2);cursor:pointer;align-items:center}
+.res:hover{background:var(--accent-soft)}
+.res .c{font-family:Consolas,monospace;font-weight:700}
 #mapDlg{max-width:900px}
-.maptbl{font-size:13px;margin:8px 0 14px;overflow:auto;max-height:240px;border:1px solid var(--line);border-radius:8px}
-.maptbl th,.maptbl td{padding:4px 8px;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
+.maptbl{font-size:13px;margin:8px 0 14px;overflow:auto;max-height:230px;border:1px solid var(--line);border-radius:8px}
+.maptbl table{border-collapse:collapse}
+.maptbl th,.maptbl td{padding:4px 8px;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid var(--line2);text-align:left}
 .mapgrid{display:grid;grid-template-columns:230px 1fr;gap:10px 14px;align-items:center}
 .mapgrid .bcs{display:flex;flex-wrap:wrap;gap:4px 14px}
-/* ---- Botón cámara y escáner a pantalla completa ---- */
-#camBtn{background:#14212f;color:#fff;border-color:#14212f;padding:14px 16px;font-weight:700}
-#camBtn:hover{background:#22344a}
+.opt{display:flex;gap:10px;align-items:flex-start;margin-bottom:14px}
+.opt input{width:20px;height:20px;margin-top:2px}
+
+/* ---------- Cámara ---------- */
 #cam{position:fixed;inset:0;z-index:100;background:#000;display:flex;flex-direction:column;color:#fff}
-.camtop{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;background:#14212f;font-size:15px}
-.camtop b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.camtop button{background:#cf222e;color:#fff;border-color:#cf222e;font-weight:700;padding:9px 14px}
 #cam > *{min-width:0}
+.camtop{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;padding-top:calc(10px + env(safe-area-inset-top));background:var(--navy)}
+.camtop b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.camtop button{background:var(--bad);color:#fff;border-color:var(--bad);font-weight:700}
 .camview{position:relative;flex:1;min-height:0;overflow:hidden;background:#000}
 #camVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .camframe{position:absolute;left:8%;right:8%;top:32%;bottom:32%;border:3px solid rgba(255,255,255,.9);border-radius:14px;box-shadow:0 0 0 2000px rgba(0,0,0,.35);pointer-events:none}
 .camframe.hit{border-color:#2ea043;box-shadow:0 0 0 2000px rgba(46,160,67,.25)}
 .camline{position:absolute;left:6%;right:6%;top:50%;height:2px;background:#ff4d4d;box-shadow:0 0 8px #ff4d4d}
 .camhint{position:absolute;bottom:10px;left:0;right:0;text-align:center;font-size:13px;color:#ddd;text-shadow:0 1px 3px #000;padding:0 10px}
-#camLast{margin:0;border-radius:0;font-size:17px;min-height:88px}
-#camLast .big{font-size:22px}
-.cambar{display:flex;gap:8px;align-items:center;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:#14212f;flex-wrap:wrap}
+#camLast{margin:0;border-radius:0;min-height:86px}
+.cambar{display:flex;gap:8px;align-items:center;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:var(--navy)}
 .cambar label{display:flex;align-items:center;gap:6px;font-size:14px}
 .cambar input{width:70px;font-size:20px;text-align:center;padding:8px}
-.cambar button{background:#22344a;color:#fff;border-color:#34506e;padding:11px 14px;font-size:15px}
+.cambar button{background:var(--navy2);color:#fff;border-color:#34506e;padding:11px 14px}
 .cambar .grow{flex:1}
-#menuBtn,#drawerBg{display:none}
 
-/* ---- Móvil ---- */
-@media (max-width: 760px){
-  body{font-size:16px}
-  input,select,button{font-size:16px}
-  header.top{flex-wrap:wrap;gap:8px;padding:8px 10px}
-  header.top .brand{font-size:16px;flex:1}
-  header.top label{order:5;width:100%;font-size:12px}
-  header.top input{flex:1;width:auto}
-  header.top .save{order:6;margin-left:0;font-size:12px}
-  header.top .save small{display:none}
-  header.top button{padding:7px 10px}
-  #menuBtn{display:inline-block;font-size:15px;padding:7px 10px;font-weight:700}
-  header.top .brand{font-size:14px}
-  .wrap{height:auto;min-height:calc(100% - 100px)}
-  aside{position:fixed;left:0;top:0;bottom:0;z-index:60;width:86vw;max-width:340px;min-width:0;transform:translateX(-105%);transition:transform .2s;box-shadow:4px 0 20px rgba(0,0,0,.25)}
-  aside.open{transform:none}
-  #drawerBg.open{display:block;position:fixed;inset:0;background:rgba(10,20,30,.45);z-index:55}
-  main{padding:12px 10px 40px;overflow:visible}
-  .ztitle{font-size:21px}
-  .zactions{width:100%}
-  .zactions button{flex:1 1 auto;padding:9px 8px;font-size:14px}
-  .scanarea{padding:10px;border-width:2px}
-  .scanrow{gap:8px}
-  .field.grow{min-width:0;flex:1 1 100%}
-  header.top .hm{display:none}
-  header.top label{order:5;flex:1 1 60%}
-  header.top .save{order:6}
-  #scan{font-size:20px;padding:10px}
-  #qty{width:80px;font-size:20px;padding:10px 6px}
-  #camBtn{order:0;flex:1 1 100%;font-size:18px;padding:16px}
-  .chk{padding-bottom:12px}
-  #undoBtn{padding:12px}
-  .last{font-size:16px}
-  .last .big{font-size:21px}
-  .tools #search{flex:1;width:auto;min-width:0}
-  .tools select{flex:1}
-  details.manual{width:100%}
-  #manualForm{flex-wrap:wrap} #mCode{flex:1;width:auto;min-width:0}
-  .count{margin-left:0;width:100%}
-  /* tabla en formato tarjetas */
-  .tablewrap thead{display:none}
-  .tablewrap table,.tablewrap tbody{display:block;width:100%}
-  .tablewrap tr{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:10px 12px;border-bottom:1px solid #edf0f3}
-  .tablewrap td{border:0;padding:0}
-  td.num,td.sm{display:none}
-  td.code{grid-column:1;font-size:15px;word-break:break-all}
-  td.desc{grid-column:1;max-width:none}
-  td.q{grid-column:2;grid-row:1 / span 2;align-self:center;font-size:24px;width:auto;padding:4px 8px;border-radius:8px}
-  td.act{grid-column:1 / -1;text-align:left;padding-top:8px;white-space:normal;width:auto}
-  td.act button{padding:8px 13px;font-size:15px;margin:2px 2px 0 0}
-  td.zones-cell{grid-column:1 / -1}
-  td.noitems{grid-column:1 / -1}
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:11px 18px;border-radius:12px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:200;max-width:90vw;text-align:center}
+#toast.show{opacity:1}
+
+@media (max-width:640px){
+  header.top{padding:8px 10px;padding-top:calc(8px + env(safe-area-inset-top));gap:6px}
+  header.top .brand span{display:none}
+  nav.tabs{top:calc(50px + env(safe-area-inset-top))}
+  main{padding:12px 10px 110px}
+  .form-grid{grid-template-columns:1fr}
   .mapgrid{grid-template-columns:1fr}
-  dialog .db{padding:12px}
+  .subcard{grid-template-columns:auto 1fr}
+  .subcard .a{grid-column:1 / -1;justify-content:flex-start}
+  .bulk{top:calc(98px + env(safe-area-inset-top))}
 }
-.trash-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #edf0f3}
 </style>
 </head>
 <body>
-<header class="top">
-  <button id="menuBtn" title="Zonas y menú">☰ Zonas</button>
-  <div class="brand">📦 Inventario Ágil</div>
-  <label>Equipo / persona <input id="device" placeholder="p. ej. Portátil 1 - Ana" autocomplete="off"></label>
-  <div id="saveStatus" class="save">Sin cambios</div>
-  <button id="saveBtn" class="savebtn" title="Guardar ahora (Ctrl+S)">💾 Guardar</button>
-  <button id="installBtn" hidden title="Instalar como aplicación en este ordenador">⬇ Instalar app</button>
-  <button id="helpBtn">?<span class="hm"> Ayuda</span></button>
-</header>
-<div id="tabWarn">⚠ La aplicación está abierta en otra pestaña o ventana de este mismo ordenador. Cierra las demás y trabaja solo en una para no perder escaneos.</div>
-<div class="wrap">
-  <div id="drawerBg"></div>
-  <aside id="drawer">
-    <div class="side-h">Zonas / marcas</div>
-    <form id="newZoneForm"><input id="newZoneName" placeholder="Nueva zona o marca…" autocomplete="off"><button class="primary">+ Crear</button></form>
-    <div id="zoneList"></div>
-    <div class="side-h">Catálogo de productos</div>
-    <div class="catbox" id="catBox"></div>
-    <div class="side-actions">
-      <button id="catLoadBtn">📋 Cargar Excel de productos</button>
-      <input type="file" id="catFile" accept=".xlsx,.csv,.txt" hidden>
-      <button id="catApplyBtn">🔁 Aplicar catálogo a lo ya escaneado</button>
-      <button id="catClearBtn" class="danger">Quitar catálogo</button>
-    </div>
-    <div class="side-h">Todo el inventario</div>
-    <div class="side-actions">
-      <button id="expAllSheets">⬇ Excel: una hoja por zona</button>
-      <button id="expAllZip">⬇ ZIP: un Excel por zona</button>
-      <button id="expConsol">⬇ Excel consolidado (todo sumado)</button>
-      <hr>
-      <button id="expJson">💾 Guardar copia (.json)</button>
-      <button id="impJson">📥 Importar / juntar copias de otros portátiles</button>
-      <input type="file" id="impFile" accept=".json,application/json" multiple hidden>
-      <button id="fileBackupBtn">🛟 Copia automática en archivo: NO</button>
-      <hr>
-      <button id="settingsBtn">⚙ Ajustes y papelera</button>
-      <button id="wipeBtn" class="danger">🧹 Nuevo inventario (vaciar todo)</button>
-    </div>
-  </aside>
+
+<!-- ================= ACCESO ================= -->
+<section id="authView" class="auth" hidden>
+  <div class="authcard">
+    <img src="icon-192.png" alt="">
+    <h1>Inventario Ágil</h1>
+    <form id="loginForm">
+      <p class="sub">Entra con tu usuario y tu PIN</p>
+      <label for="lUser">Usuario</label>
+      <input id="lUser" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="p. ej. ana">
+      <label for="lPin">PIN (6 números)</label>
+      <input id="lPin" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="current-password" placeholder="••••••">
+      <button class="big primary" id="lBtn">Entrar</button>
+      <div class="err" id="lErr"></div>
+    </form>
+    <form id="setupForm" hidden>
+      <p class="sub">Primera vez: crea el usuario <b>administrador</b>. Con él podrás cargar el catálogo, crear empleados y descargar los Excel.</p>
+      <label for="sName">Tu nombre</label>
+      <input id="sName" autocomplete="name" placeholder="p. ej. Laura">
+      <label for="sUser">Usuario</label>
+      <input id="sUser" autocapitalize="none" spellcheck="false" placeholder="p. ej. admin">
+      <label for="sPin">PIN (6 números)</label>
+      <input id="sPin" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password">
+      <label for="sPin2">Repite el PIN</label>
+      <input id="sPin2" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password">
+      <button class="big primary" id="sBtn">Crear administrador</button>
+      <div class="err" id="sErr"></div>
+    </form>
+  </div>
+</section>
+
+<!-- ================= APP ================= -->
+<div id="appView" hidden>
+  <header class="top">
+    <div class="brand"><img src="icon-192.png" alt=""><span>Inventario</span></div>
+    <div class="pill" id="syncPill">…</div>
+    <div class="sp"></div>
+    <button id="userBtn">👤 <span id="userName"></span></button>
+  </header>
+  <nav class="tabs" id="tabs" hidden>
+    <button data-tab="count" class="on">📦 Contar</button>
+    <button data-tab="subs">📥 Recibidos <span id="subsBadge" class="badge b-blue" hidden></span></button>
+    <button data-tab="cat">📋 Catálogo</button>
+    <button data-tab="users">👥 Usuarios</button>
+    <button data-tab="maps">🔗 Códigos asignados</button>
+  </nav>
 
   <main>
-    <section id="emptyView" class="empty">
-      <h2>Empieza creando una zona o marca</h2>
-      <form id="emptyZoneForm" class="emptyform"><input id="emptyZoneName" placeholder="Nombre: Pasillo 3, Almacén, Marca Bosch…" autocomplete="off" enterkeyhint="done"><button class="primary">+ Crear zona</button></form>
-      <p>Después escanea los productos: cada código se suma en una única línea. Las zonas que ya existen están en <b>☰ Zonas</b> (en el ordenador, a la izquierda).</p>
-      <p>Todo se guarda solo en este ordenador después de cada escaneo.</p>
+    <!-- ---------- CONTAR: mis zonas ---------- -->
+    <section id="homeView">
+      <div id="catNotice"></div>
+      <h2>Mis zonas</h2>
+      <form class="newzone" id="newZoneForm">
+        <input id="newZoneName" placeholder="Nueva zona: Pasillo 3, Almacén…" autocomplete="off" enterkeyhint="go">
+        <button class="primary">+ Crear</button>
+      </form>
+      <div id="zoneList"></div>
     </section>
 
+    <!-- ---------- CONTAR: dentro de una zona ---------- -->
     <section id="zoneView" hidden>
       <div class="zhead">
-        <div><div class="ztitle" id="zTitle"></div><div class="zmeta" id="zMeta"></div></div>
-        <div class="zactions" id="zActions">
-          <button id="zExport" class="primary">⬇ Excel de esta zona</button>
-          <button id="zRename">Renombrar</button>
-          <button id="zDone">✔ Marcar terminada</button>
-          <button id="zDelete" class="danger">Eliminar zona</button>
-        </div>
-        <div class="zactions" id="tActions" hidden>
-          <button id="tExport" class="primary">⬇ Excel consolidado</button>
-          <button id="tExport2">⬇ Excel: una hoja por zona</button>
-        </div>
+        <button id="backBtn">← Zonas</button>
+        <div class="zt" id="zTitle"></div>
+        <span id="zBadge"></span>
       </div>
+      <div class="zstats" id="zStats"></div>
 
-      <div id="scanArea" class="scanarea">
-        <div class="scanrow">
-          <button id="camBtn" title="Leer códigos de barras con la cámara">📷 Escanear con cámara</button>
-          <div class="field grow"><label for="scan">Código de barras (escanea aquí)</label><input id="scan" autocomplete="off" spellcheck="false"></div>
-          <div class="field"><label for="qty">Cantidad</label><input id="qty" value="1" inputmode="decimal" autocomplete="off"></div>
-          <label class="chk"><input type="checkbox" id="fixQty"> Fijar cantidad</label>
-          <button id="undoBtn" title="Deshace el último escaneo o cambio (Ctrl+Z)">↶ Deshacer</button>
+      <div id="zOpen">
+        <button class="big dark" id="camBtn">📷 Escanear con la cámara</button>
+        <div class="scanbox" id="scanBox">
+          <label for="scan">O escribe el código (también para pistola lectora)</label>
+          <div class="row">
+            <input id="scan" class="grow mono" autocomplete="off" spellcheck="false" inputmode="text" enterkeyhint="done" placeholder="Código de barras o código ERP">
+            <input id="qty" value="1" inputmode="decimal" autocomplete="off" title="Cantidad">
+            <button id="addBtn" class="primary">Añadir</button>
+          </div>
+          <div class="scanhint" id="scanHint"></div>
         </div>
-        <div class="focuswarn" id="focusWarn"></div>
-        <div id="last" class="last">Esperando el primer escaneo…</div>
       </div>
+      <div class="last" id="last">Escanea el primer producto.</div>
 
       <div class="tools">
-        <input id="search" placeholder="🔍 Buscar código…" autocomplete="off">
-        <select id="sort">
-          <option value="recent">Último escaneado arriba</option>
-          <option value="code">Ordenar por código</option>
-          <option value="qty">Ordenar por cantidad</option>
-        </select>
-        <details class="manual" id="manualBox"><summary>+ Añadir línea a mano</summary>
-          <form id="manualForm"><input id="mCode" placeholder="Código" autocomplete="off"><input id="mQty" placeholder="Cant." value="1" autocomplete="off"><button class="primary">Añadir</button></form>
-        </details>
-        <span class="count" id="count"></span>
+        <input id="search" placeholder="🔍 Buscar en esta zona" autocomplete="off">
+        <button id="findBtn">📖 Buscar producto</button>
+        <button id="undoBtn">↶ Deshacer</button>
       </div>
-      <div class="tablewrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+      <div class="items" id="items"></div>
+      <div class="row" style="justify-content:center;margin-top:14px"><button class="link" id="zDelete">Eliminar esta zona</button></div>
+    </section>
+
+    <!-- ---------- ADMIN: recibidos ---------- -->
+    <section id="subsView" hidden>
+      <h2>Excels recibidos</h2>
+      <p class="muted small" style="margin-top:-6px">Cada vez que alguien pulsa «Terminar y enviar» en una zona, aparece aquí al momento.</p>
+      <div class="row" style="margin-bottom:6px">
+        <select id="subsRange"><option value="1">Hoy</option><option value="7" selected>Últimos 7 días</option><option value="31">Últimos 30 días</option><option value="0">Todos</option></select>
+        <input id="subsSearch" class="grow" placeholder="🔍 Zona o persona" autocomplete="off">
+      </div>
+      <div class="bulk">
+        <button id="selAll">☑ Todos</button>
+        <button id="dlSheets" class="primary">⬇ Excel (una hoja por zona)</button>
+        <button id="dlZip">⬇ ZIP (un Excel por zona)</button>
+        <button id="dlCons">⬇ Consolidado (todo sumado)</button>
+        <button id="delSubs" class="danger">🗑 Eliminar</button>
+      </div>
+      <div class="muted small" id="subsInfo"></div>
+      <div id="subsList"></div>
+    </section>
+
+    <!-- ---------- ADMIN: catálogo ---------- -->
+    <section id="catView" hidden>
+      <h2>Catálogo de productos</h2>
+      <div class="card" id="catStatus"></div>
+      <div class="row" style="margin:12px 0">
+        <button class="primary" id="catLoadBtn">📋 Importar Excel de stock</button>
+        <input type="file" id="catFile" accept=".xlsx,.csv,.txt,.xls" hidden>
+      </div>
+      <p class="muted small">Al importar, el catálogo nuevo sustituye al anterior y <b>se actualiza solo en todos los móviles y ordenadores</b> en unos segundos. Excel con el código ERP (normalmente columna A) y una o varias columnas con el código de barras del proveedor.</p>
+      <h3>Probar un código</h3>
+      <div class="row"><input id="testCode" class="grow mono" placeholder="Escribe o escanea un código" autocomplete="off"><button id="testBtn">Probar</button></div>
+      <div id="testRes" class="last" style="margin-top:10px" hidden></div>
+      <h3>Ajustes de los Excel</h3>
+      <label class="opt"><input type="checkbox" id="optText"><span><b>Código como texto</b><br><span class="small muted">Conserva ceros a la izquierda y evita que Excel muestre 8,41E+12. Desmárcalo solo si administración lo necesita como número.</span></span></label>
+      <label class="opt"><input type="checkbox" id="optZero"><span><b>No exportar líneas con cantidad 0</b></span></label>
+    </section>
+
+    <!-- ---------- ADMIN: usuarios ---------- -->
+    <section id="usersView" hidden>
+      <h2>Usuarios</h2>
+      <form class="card" id="newUserForm">
+        <div class="form-grid">
+          <div><label for="nuName">Nombre</label><input id="nuName" placeholder="p. ej. Ana García" autocomplete="off"></div>
+          <div><label for="nuUser">Usuario (para entrar)</label><input id="nuUser" placeholder="p. ej. ana" autocapitalize="none" spellcheck="false" autocomplete="off"></div>
+          <div><label for="nuPin">PIN (6 números)</label><input id="nuPin" inputmode="numeric" maxlength="6" placeholder="p. ej. 482915" autocomplete="off"></div>
+          <div><label for="nuRole">Tipo</label><select id="nuRole"><option value="empleado">Empleado (solo contar)</option><option value="admin">Administrador</option></select></div>
+        </div>
+        <div class="row" style="margin-top:12px"><button class="primary">+ Crear usuario</button><button type="button" class="link" id="genPin">Generar PIN</button><span class="err" id="nuErr" style="margin:0"></span></div>
+      </form>
+      <h3>Usuarios creados</h3>
+      <div id="userList"></div>
+    </section>
+
+    <!-- ---------- ADMIN: códigos asignados ---------- -->
+    <section id="mapsView" hidden>
+      <h2>Códigos asignados</h2>
+      <p class="muted small" style="margin-top:-6px">Códigos de proveedor que no estaban en el catálogo y a los que alguien les ha puesto nuestro código ERP al escanear. Valen para todos. Si alguno está mal, bórralo.</p>
+      <input id="mapsSearch" placeholder="🔍 Buscar" autocomplete="off" style="width:100%;margin-bottom:10px">
+      <div id="mapsList"></div>
     </section>
   </main>
+
+  <div class="finish" id="finishBar" hidden><div class="in"><button class="big ok" id="finishBtn">✔ Terminar y enviar zona</button></div></div>
 </div>
-<div id="toast"></div>
+
+<!-- ================= DIÁLOGOS ================= -->
+<dialog id="unkDlg">
+  <form method="dialog" id="unkForm">
+    <div class="dh">⚠ Código no encontrado</div>
+    <div class="db">
+      <p style="margin-top:0">El código <b class="mono" id="unkCode"></b> no está en el catálogo. <b>No se ha sumado.</b></p>
+      <p>Si es un código del proveedor, escribe o escanea aquí <b>nuestro código</b> (el de la etiqueta o el del ERP). Quedará guardado para todos.</p>
+      <input id="unkInput" class="mono" autocomplete="off" placeholder="Nuestro código" inputmode="text">
+      <div class="err" id="unkErr"></div>
+      <div class="desc" id="unkPreview"></div>
+    </div>
+    <div class="df"><button type="button" id="unkCancel">No sumar</button><button type="button" id="unkFind">📖 Buscar producto</button><button class="primary" id="unkOk">Guardar y sumar</button></div>
+  </form>
+</dialog>
+
+<dialog id="findDlg">
+  <div class="dh">📖 Buscar producto <button id="findClose">Cerrar</button></div>
+  <div class="db">
+    <div class="row"><input id="findInput" class="grow" placeholder="Nombre o código" autocomplete="off"><label class="small muted">Cant. <input id="findQty" value="1" inputmode="decimal" style="width:64px"></label></div>
+    <div id="findRes" style="margin-top:8px"></div>
+  </div>
+</dialog>
+
+<dialog id="userDlg">
+  <div class="dh"><span>👤 <span id="udName"></span></span><button data-close>Cerrar</button></div>
+  <div class="db">
+    <div class="kv" id="udInfo"></div>
+    <h3>Opciones</h3>
+    <label class="opt"><input type="checkbox" id="optSound"><span><b>Pitidos y vibración</b><br><span class="small muted">1 pitido = nuevo · 2 = ya estaba, se ha sumado · grave = error</span></span></label>
+    <div class="row"><button id="saveBtn">💾 Guardar ahora</button><button id="installBtn" hidden>⬇ Instalar app</button><button id="helpBtn">? Ayuda</button></div>
+  </div>
+  <div class="df"><button class="danger" id="logoutBtn">Cerrar sesión</button></div>
+</dialog>
+
+<dialog id="viewDlg">
+  <div class="dh"><span id="vdTitle"></span><button data-close>Cerrar</button></div>
+  <div class="db" id="vdBody"></div>
+</dialog>
+
+<dialog id="mapDlg">
+  <div class="dh">Importar catálogo <button data-close>Cancelar</button></div>
+  <div class="db">
+    <p style="margin-top:0">Archivo: <b id="mapFile"></b>. Indica qué hay en cada columna. Estas son las primeras filas:</p>
+    <div class="mapgrid" style="margin-bottom:6px"><b>Hoja</b><select id="mapSheet"></select></div>
+    <div class="maptbl"><table id="mapPreview"></table></div>
+    <div class="mapgrid">
+      <b>Código ERP (el que se sube)</b><select id="mapErp"></select>
+      <b>Código(s) de barras del proveedor</b><div class="bcs" id="mapBc"></div>
+      <b>Descripción</b><select id="mapDesc"></select>
+      <b>Primera fila</b><label><input type="checkbox" id="mapHeader"> Son títulos, no un producto</label>
+    </div>
+    <p id="mapInfo" class="muted small"></p>
+  </div>
+  <div class="df"><button id="mapGo" class="primary">Importar y enviar a todos</button></div>
+</dialog>
+
+<dialog id="helpDlg">
+  <div class="dh">Cómo se usa <button data-close>Cerrar</button></div>
+  <div class="db">
+    <ol>
+      <li>Crea una zona (o abre una tuya) en <b>Mis zonas</b>.</li>
+      <li>Pulsa <b>📷 Escanear con la cámara</b> y apunta al código de barras. Cada producto se suma en una sola línea; si ya estaba, verás <b>«YA ESTABA ✔ SUMADO»</b>.</li>
+      <li>Para contar otra unidad del mismo producto: aparta la cámara un par de segundos o pulsa <b>+ Otra vez</b>. Para varias unidades de golpe, pon la cantidad antes de escanear.</li>
+      <li>Si sale <b>«Código no encontrado»</b>, escribe nuestro código del producto y pulsa <b>Guardar y sumar</b>. La próxima vez ya lo reconocerá (para todos).</li>
+      <li>Si un producto no tiene código de barras, usa <b>📖 Buscar producto</b> y búscalo por nombre.</li>
+      <li>¿Error? <b>↶ Deshacer</b>, o toca la cantidad para corregirla.</li>
+      <li>Al acabar, pulsa <b>✔ Terminar y enviar zona</b>. Si no hay internet, se enviará sola cuando vuelva.</li>
+    </ol>
+    <p class="muted small">Todo se guarda en el dispositivo tras cada escaneo: si se cierra la app o se apaga el móvil, no se pierde nada.</p>
+  </div>
+</dialog>
 
 <div id="cam" hidden>
   <div class="camtop"><b>📷 <span id="camZone"></span></b><button id="camClose">✕ Cerrar</button></div>
@@ -331,769 +426,631 @@ tr.unk td{background:#fff5f0}
   <div id="camLast" class="last">Apunta al código de barras…</div>
   <div class="cambar">
     <label>Cant. <input id="camQty" value="1" inputmode="decimal" autocomplete="off"></label>
-    <button id="camAgain" class="grow" disabled title="Vuelve a sumar el último código leído">+ Otra vez</button>
-    <button id="camUndo" title="Deshacer el último">↶</button>
+    <button id="camAgain" class="grow" disabled>+ Otra vez</button>
+    <button id="camUndo" title="Deshacer">↶</button>
     <button id="camTorch" hidden title="Linterna">🔦</button>
   </div>
 </div>
+<div id="toast"></div>
 
-<dialog id="helpDlg">
-  <div class="dh">Cómo se usa <button data-close>Cerrar</button></div>
-  <div class="db">
-    <ol>
-      <li>Escribe arriba el nombre del <b>equipo o persona</b> (sale en los nombres de los archivos).</li>
-      <li>Crea una <b>zona o marca</b> y selecciónala.</li>
-      <li>Escanea con la pistola. Si el recuadro está en <b style="color:var(--ok)">verde</b>, está listo. Si está en <b style="color:var(--bad)">rojo</b>, haz clic en la casilla del código.</li>
-      <li>Si escaneas un producto que ya estaba, <b>se suma en la misma línea</b> y verás el aviso amarillo <i>“YA ESTABA”</i> con la nueva cantidad (y un pitido doble).</li>
-      <li><b>Con el móvil o la tablet:</b> pulsa <b>📷 Escanear con cámara</b> y apunta al código. Cada código se suma una vez; para contar otra unidad del mismo producto, aparta la cámara un par de segundos o pulsa <b>+ Otra vez</b>. Las zonas y el menú están en el botón <b>☰</b>.</li>
-      <li>Para contar varias unidades de golpe: escribe la cantidad en <b>Cantidad</b> y luego escanea. También puedes escanear o escribir <kbd>*12</kbd> en la casilla del código: el próximo escaneo contará 12.</li>
-      <li>¿Te has equivocado? <kbd>Ctrl</kbd>+<kbd>Z</kbd> o el botón <b>Deshacer</b>. Para corregir una cantidad, haz clic sobre ella en la tabla. Para restar, usa <b>−1</b> o una cantidad negativa (p. ej. <kbd>-2</kbd>).</li>
-      <li><b>Catálogo de productos:</b> carga el Excel de productos en stock (columna A = código ERP y, en otra columna, el código de barras del proveedor). Al escanear un código de proveedor se apunta directamente el código ERP y verás el aviso 🔁. Si un código no está en el catálogo, sale en <b style="color:var(--bad)">rojo</b>: pulsa <b>🔗 Asignar</b> en esa línea para decirle su código ERP y la app lo recordará. El catálogo se carga una vez en cada portátil.</li>
-      <li>Al acabar una zona, pulsa <b>Marcar terminada</b> para que nadie siga escaneando en ella por error.</li>
-    </ol>
-    <h4>Excel</h4>
-    <ul>
-      <li>Todos los Excel salen <b>sin cabecera</b>: columna A = código, columna B = cantidad.</li>
-      <li><b>Excel de esta zona</b>: solo la zona abierta.</li>
-      <li><b>Una hoja por zona</b>: un solo archivo con una pestaña por zona.</li>
-      <li><b>ZIP</b>: un archivo Excel separado por cada zona.</li>
-      <li><b>Consolidado</b>: todo el inventario en una sola hoja, sumando un mismo código que esté en varias zonas.</li>
-    </ul>
-    <h4>Día del inventario general (varios portátiles)</h4>
-    <ol>
-      <li>Abre este archivo en cada portátil y pon un nombre distinto en <b>Equipo / persona</b>.</li>
-      <li>Repartid las zonas: cada portátil crea las suyas.</li>
-      <li>Al final, cada portátil pulsa <b>Guardar copia (.json)</b> y la pasa (USB, correo, carpeta compartida…) a un portátil “central”.</li>
-      <li>En el central: <b>Importar / juntar copias</b> (puedes seleccionar varios archivos a la vez). Luego exporta el Excel que necesitéis.</li>
-      <li>O bien cada portátil saca sus propios Excel por zona y los juntáis en administración.</li>
-    </ol>
-    <h4>Seguridad de los datos</h4>
-    <ul>
-      <li>Se guarda en el navegador de este ordenador tras cada escaneo. Si se apaga, al volver a abrir el archivo estará todo.</li>
-      <li>No borres los “datos de navegación / cookies” del navegador mientras haya un inventario a medias.</li>
-      <li>Para más tranquilidad, activa <b>Copia automática en archivo</b>: además guarda una copia .json en la carpeta que elijas (se pide de nuevo cada vez que abres la app).</li>
-      <li>Las zonas eliminadas van a la <b>papelera</b> (en Ajustes) y se pueden recuperar.</li>
-    </ul>
-  </div>
-</dialog>
-
-<dialog id="settingsDlg">
-  <div class="dh">Ajustes <button data-close>Cerrar</button></div>
-  <div class="db">
-    <label class="opt"><input type="checkbox" id="optText"> <span><b>Guardar el código como texto en el Excel</b><br><small>Recomendado: conserva los ceros a la izquierda y evita que Excel muestre códigos largos como 8,41E+12. Desmárcalo solo si administración necesita el código como número.</small></span></label>
-    <label class="opt"><input type="checkbox" id="optSound"> <span><b>Pitidos</b><br><small>Un pitido = producto nuevo · dos pitidos = ya estaba, se ha sumado · pitido grave = error.</small></span></label>
-    <label class="opt"><input type="checkbox" id="optBlock"> <span><b>No dejar añadir códigos que no están en el catálogo</b><br><small>Si está desmarcado (recomendado), el código se añade igualmente pero marcado en rojo para que lo revises y le asignes su código ERP.</small></span></label>
-    <label class="opt"><input type="checkbox" id="optZero"> <span><b>No exportar líneas con cantidad 0</b></span></label>
-    <h4>Papelera (zonas eliminadas)</h4>
-    <div id="trashList"></div>
-  </div>
-</dialog>
-
-<dialog id="mapDlg">
-  <div class="dh">Cargar catálogo de productos <button data-close>Cancelar</button></div>
-  <div class="db">
-    <p style="margin-top:0">Archivo: <b id="mapFile"></b>. Indica qué hay en cada columna. Estas son las primeras filas:</p>
-    <div class="mapgrid" style="margin-bottom:6px"><b>Hoja</b><select id="mapSheet"></select></div>
-    <div class="maptbl"><table id="mapPreview"></table></div>
-    <div class="mapgrid">
-      <b>Código ERP (el que se sube)</b><select id="mapErp"></select>
-      <b>Código(s) de barras del proveedor</b><div class="bcs" id="mapBc"></div>
-      <b>Descripción (opcional)</b><select id="mapDesc"></select>
-      <b>Primera fila</b><label><input type="checkbox" id="mapHeader"> Son títulos, no un producto</label>
-    </div>
-    <p id="mapInfo" style="color:var(--muted)"></p>
-    <div style="text-align:right"><button id="mapGo" class="primary">Cargar catálogo</button></div>
-  </div>
-</dialog>
-
+<script src="supabase.js"></script>
 <script>
 'use strict';
-/* ================= Estado y guardado ================= */
-const KEY = 'inventarioAgil.v1';
+/* ================= Configuración ================= */
+const SB_URL = 'https://xcypuosowkulipfllqdc.supabase.co';
+const SB_KEY = 'sb_publishable_5LCAMonn60_hZXXHIVs7YQ_xLAjQRSD';
+const EMAIL_DOMAIN = 'inventario.invalid';
+const SB = window.supabase.createClient(SB_URL, SB_KEY, {auth:{persistSession:true, autoRefreshToken:true, storageKey:'inv-auth'}});
+
+/* ================= Utilidades ================= */
 const $ = s => document.querySelector(s);
 const now = () => Date.now();
 const uid = () => Math.random().toString(36).slice(2, 9) + now().toString(36);
 const round = x => Math.round(x * 1000) / 1000;
-const fmtT = t => new Date(t).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+const fmtT = t => new Date(t).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'});
 const fmtDT = t => new Date(t).toLocaleString('es-ES', {day:'2-digit', month:'2-digit', year:'2-digit', hour:'2-digit', minute:'2-digit'});
 const fmtN = n => round(n).toLocaleString('es-ES');
-const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const parseQty = v => { const n = parseFloat(String(v).trim().replace(',', '.')); return isFinite(n) ? n : NaN; };
-const TOTAL = '__total__';
-
-function blank(){ return {version:1, device:'', zones:[], active:null, sort:'recent', undo:[], trash:[], importLog:[], opts:{codeText:true, sound:true, skipZero:false, blockUnknown:false}}; }
-function load(){
-  try{
-    const s = JSON.parse(localStorage.getItem(KEY));
-    if (s && Array.isArray(s.zones)) { const b = blank(); return Object.assign(b, s, {opts:Object.assign(b.opts, s.opts || {})}); }
-  }catch(e){ console.error(e); }
-  return null;
-}
-let S = load() || blank();
-let dirty = false, saveTimer = null, lastSaved = 0;
-
-function changed(){ dirty = true; clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 200); scheduleFileBackup(); }
-function saveNow(){
-  clearTimeout(saveTimer);
-  try{
-    selfWrite = true;
-    localStorage.setItem(KEY, JSON.stringify(S));
-    dirty = false; lastSaved = now();
-    setSave('ok', '✔ Guardado ' + fmtT(lastSaved));
-    return true;
-  }catch(e){
-    setSave('bad', '⚠ NO SE HA PODIDO GUARDAR — guarda una copia .json ya');
-    console.error(e);
-    return false;
-  }
-}
-function setSave(cls, txt){ const el = $('#saveStatus'); el.className = 'save ' + cls; el.innerHTML = esc(txt) + ' <small>· auto cada 5 min</small>'; el.title = 'Se guarda en este ordenador tras cada escaneo y, además, automáticamente cada 5 minutos. Sigue guardado aunque cierres la página o reinicies el PC.'; }
-// Guardado manual (botón o Ctrl+S)
-function manualSave(){
-  if (saveNow()){ if (fileHandle) writeFileBackup(); toast('💾 Guardado. Puedes cerrar la página o apagar el PC: al volver estará todo igual.'); }
-}
-$('#saveBtn').addEventListener('click', manualSave);
-document.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's'){ e.preventDefault(); manualSave(); } });
-// Autoguardado de seguridad cada 5 minutos (además del guardado tras cada escaneo)
-setInterval(() => { saveNow(); if (fileHandle) writeFileBackup(); }, 5 * 60 * 1000);
-setInterval(() => { if (dirty) saveNow(); }, 15000);
-window.addEventListener('beforeunload', () => { if (dirty) saveNow(); });
-document.addEventListener('visibilitychange', () => { if (document.hidden && dirty) saveNow(); });
-try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
-
-// Otra pestaña con la app abierta en el mismo ordenador
-let selfWrite = false;
-window.addEventListener('storage', e => {
-  if (e.key !== KEY || !e.newValue) return;
-  const s = load(); if (s) { S = s; render(); }
-  $('#tabWarn').style.display = 'block';
-});
-
-/* ================= Zonas ================= */
-const zoneById = id => S.zones.find(z => z.id === id);
-const activeZone = () => (S.active && S.active !== TOTAL) ? zoneById(S.active) || null : null;
-const zoneUnits = z => round(z.items.reduce((a, it) => a + it.q, 0));
-
-function createZone(name){
-  name = name.trim(); if (!name) return;
-  if (S.zones.some(z => z.name.toLowerCase() === name.toLowerCase()) &&
-      !confirm(`Ya existe una zona llamada "${name}". ¿Crear otra con el mismo nombre?`)) return;
-  const z = {id:uid(), name, created:now(), done:false, items:[]};
-  S.zones.push(z); S.active = z.id;
-  changed(); render(); resetLast(); focusScan();
-}
-function selectZone(id){ S.active = id; changed(); render(); resetLast(); focusScan(); }
-
-/* ================= Escaneo ================= */
-function guard(z){
-  if (!z){ fail('Primero crea o selecciona una zona.'); return false; }
-  if (z.done){ fail(`La zona "${z.name}" está marcada como terminada. Pulsa "Reabrir zona" para seguir.`); return false; }
-  return true;
-}
-function addScan(raw, qty, manual){
-  const z = activeZone(); if (!guard(z)) return;
-  raw = String(raw).trim(); if (!raw) return;
-  if (!isFinite(qty) || qty === 0){ fail('Cantidad no válida.'); return; }
-  const r = resolve(raw);
-  if (r.status === 'unknown' && S.opts.blockUnknown){
-    fail(`El código ${raw} NO está en el catálogo. No se ha añadido. Búscalo a mano o añádelo como línea manual con su código ERP.`); return;
-  }
-  const code = r.code;
-  const i = z.items.findIndex(it => it.c === code);
-  const rep = i >= 0; let it;
-  if (rep){ it = z.items.splice(i, 1)[0]; it.q = round(it.q + qty); it.n++; it.t = now(); }
-  else { it = {c:code, q:qty, t:now(), n:1}; }
-  if (manual) it.m = true;
-  z.items.unshift(it);
-  pushUndo({k:'add', z:z.id, c:code, q:qty, created:!rep, pi:rep ? i : 0});
-  changed(); renderSidebar(); renderHead(); renderTable(code);
-  const add = (qty > 0 ? '+' : '') + fmtN(qty);
-  const d = descOf(code);
-  const extra = (d ? `<div class="desc">${esc(d)}</div>` : '') +
-    (r.status === 'map' ? `<div class="via">🔁 Código de proveedor <b>${esc(raw)}</b> → apuntado como código ERP <b>${esc(code)}</b></div>` : '');
-  if (r.status === 'unknown'){
-    showLast('unk', `<span class="big">⚠ NO ESTÁ EN EL CATÁLOGO</span><br><b>${esc(code)}</b> → <b class="big">${fmtN(it.q)}</b> (${add})<div class="via">Se ha apuntado igualmente, marcado en rojo. Revísalo y pulsa 🔗 en la línea para asignarle su código ERP.</div>`);
-    beep('err'); return;
-  }
-  if (rep) showLast('rep', `<span class="big">YA ESTABA ✔ SUMADO</span><br><b>${esc(code)}</b> → total <b class="big">${fmtN(it.q)}</b> (${add}) · escaneado ${it.n} veces${extra}`);
-  else     showLast('new', `<span class="big">NUEVO ✔</span><br><b>${esc(code)}</b> → <b class="big">${fmtN(it.q)}</b>${extra}`);
-  beep(rep ? 'rep' : 'new');
-}
-function fail(msg){ showLast('err', esc(msg)); beep('err'); }
-function showLast(cls, html){
-  for (const el of [$('#last'), $('#camLast')]){ el.className = 'last ' + cls; el.innerHTML = html; }
-}
-function resetLast(){ showLast('', 'Esperando el primer escaneo…'); }
-
-function setItemQty(code, q, label){
-  const z = activeZone(); if (!guard(z)) return;
-  const it = z.items.find(x => x.c === code); if (!it) return;
-  if (!isFinite(q)){ fail('Cantidad no válida.'); return; }
-  pushUndo({k:'set', z:z.id, c:code, prev:it.q, prevM:!!it.m});
-  it.q = round(q); it.m = true;
-  changed(); renderSidebar(); renderHead(); renderTable(code);
-  showLast('new', `${label || 'Corregido'}: <b>${esc(code)}</b> → <b class="big">${fmtN(it.q)}</b>`);
-}
-function deleteItem(code){
-  const z = activeZone(); if (!guard(z)) return;
-  const idx = z.items.findIndex(x => x.c === code); if (idx < 0) return;
-  if (!confirm(`¿Eliminar la línea ${code} (cantidad ${fmtN(z.items[idx].q)})?`)) return;
-  const it = z.items.splice(idx, 1)[0];
-  pushUndo({k:'del', z:z.id, item:it, idx});
-  changed(); renderSidebar(); renderHead(); renderTable();
-  showLast('', `Línea <b>${esc(code)}</b> eliminada (puedes deshacer con Ctrl+Z).`);
-}
-
-/* ================= Deshacer ================= */
-function pushUndo(op){ S.undo.push(op); if (S.undo.length > 500) S.undo.splice(0, S.undo.length - 500); }
-function undo(){
-  const op = S.undo.pop();
-  if (!op){ toast('No hay nada que deshacer'); return; }
-  const z = zoneById(op.z);
-  if (!z){ toast('La zona de ese cambio ya no existe'); changed(); return; }
-  if (S.active !== z.id){ S.active = z.id; }
-  let msg = '';
-  if (op.k === 'add'){
-    const i = z.items.findIndex(x => x.c === op.c);
-    if (i >= 0){
-      const it = z.items[i];
-      if (op.created && it.n <= 1){ z.items.splice(i, 1); msg = `Deshecho: quitada la línea <b>${esc(op.c)}</b>`; }
-      else {
-        it.q = round(it.q - op.q); it.n = Math.max(1, it.n - 1);
-        z.items.splice(i, 1); z.items.splice(Math.min(op.pi, z.items.length), 0, it);
-        msg = `Deshecho: <b>${esc(op.c)}</b> vuelve a <b class="big">${fmtN(it.q)}</b>`;
-      }
-    }
-  } else if (op.k === 'set'){
-    const it = z.items.find(x => x.c === op.c);
-    if (it){ it.q = op.prev; it.m = op.prevM; msg = `Deshecho: <b>${esc(op.c)}</b> vuelve a <b class="big">${fmtN(it.q)}</b>`; }
-  } else if (op.k === 'del'){
-    z.items.splice(Math.min(op.idx, z.items.length), 0, op.item);
-    msg = `Deshecho: recuperada la línea <b>${esc(op.item.c)}</b>`;
-  }
-  changed(); render(); showLast('rep', msg || 'Deshecho'); beep('new'); focusScan();
-}
-
-/* ================= Render ================= */
-function render(){ renderSidebar(); renderMain(); }
-
-function renderSidebar(){
-  const units = round(S.zones.reduce((a, z) => a + zoneUnits(z), 0));
-  let h = `<div class="zitem total ${S.active === TOTAL ? 'on' : ''}" data-z="${TOTAL}">
-    <div class="zn">📊 Total del inventario</div><div class="zs">${S.zones.length} zonas · ${fmtN(units)} unidades</div></div>`;
-  if (!S.zones.length) h += `<div class="zempty">Aún no hay zonas.</div>`;
-  for (const z of S.zones){
-    h += `<div class="zitem ${S.active === z.id ? 'on' : ''} ${z.done ? 'done' : ''}" data-z="${z.id}">
-      <div class="zn">${esc(z.name)} ${z.done ? '<span class="badge">✔ terminada</span>' : ''}</div>
-      <div class="zs">${z.items.length} líneas · ${fmtN(zoneUnits(z))} unidades</div></div>`;
-  }
-  $('#zoneList').innerHTML = h;
-}
-
-function renderMain(){
-  const z = activeZone(), isTotal = S.active === TOTAL;
-  $('#emptyView').hidden = !!(z || isTotal);
-  $('#zoneView').hidden = !(z || isTotal);
-  if (!z && !isTotal) return;
-  $('#zActions').hidden = isTotal;
-  $('#tActions').hidden = !isTotal;
-  $('#scanArea').hidden = isTotal;
-  $('#manualBox').hidden = isTotal;
-  $('#sort').value = S.sort;
-  renderHead(); renderTable(); updateFocus();
-}
-
-function renderHead(){
-  const z = activeZone();
-  if (S.active === TOTAL){
-    const codes = new Set(); S.zones.forEach(z => z.items.forEach(it => codes.add(it.c)));
-    $('#zTitle').textContent = '📊 Total del inventario';
-    $('#zMeta').textContent = `${S.zones.length} zonas · ${codes.size} códigos distintos · ${fmtN(S.zones.reduce((a, z) => a + zoneUnits(z), 0))} unidades`;
-    return;
-  }
-  if (!z) return;
-  $('#zTitle').textContent = z.name;
-  $('#zMeta').textContent = `${z.items.length} líneas · ${fmtN(zoneUnits(z))} unidades · creada ${fmtDT(z.created)}` + (z.done ? ' · TERMINADA' : '');
-  $('#zDone').textContent = z.done ? '↺ Reabrir zona' : '✔ Marcar terminada';
-  $('#scanArea').classList.toggle('locked', z.done);
-  updateFocus();
-}
-
-function sortRows(rows){
-  if (S.sort === 'code') rows.sort((a, b) => a.c.localeCompare(b.c, 'es', {numeric:true}));
-  else if (S.sort === 'qty') rows.sort((a, b) => b.q - a.q);
-  else rows.sort((a, b) => b.t - a.t);
-  return rows;
-}
-
-function renderTable(flashCode){
-  const q = $('#search').value.trim().toLowerCase();
-  const tb = $('#tbody');
-  let rows, h = '';
-  if (S.active === TOTAL){
-    const agg = new Map();
-    for (const z of S.zones) for (const it of z.items){
-      let a = agg.get(it.c);
-      if (!a){ a = {c:it.c, q:0, t:0, zones:[]}; agg.set(it.c, a); }
-      a.q = round(a.q + it.q); a.t = Math.max(a.t, it.t); a.zones.push(`${z.name} (${fmtN(it.q)})`);
-    }
-    rows = sortRows([...agg.values()].filter(r => match(r.c, q)));
-    $('#thead').innerHTML = `<tr><th>#</th><th>Código</th>${CAT ? '<th>Descripción</th>' : ''}<th class="q">Cantidad total</th><th>En zonas</th></tr>`;
-    rows.forEach((r, i) => {
-      const unk = isUnknown(r.c);
-      h += `<tr class="${unk ? 'unk' : ''}"><td class="num">${i + 1}</td><td class="code">${esc(r.c)} ${unk ? '<span class="badge u">⚠ no está en catálogo</span>' : ''}</td>${CAT ? `<td class="desc">${esc(descOf(r.c))}</td>` : ''}<td class="q" style="cursor:default">${fmtN(r.q)}</td><td class="zones-cell">${esc(r.zones.join(' · '))}</td></tr>`;
-    });
-    $('#count').textContent = `${rows.length} códigos` + unknownNote(rows);
-  } else {
-    const z = activeZone(); if (!z) return;
-    rows = sortRows(z.items.filter(r => match(r.c, q)));
-    $('#thead').innerHTML = `<tr><th>#</th><th>Código</th>${CAT ? '<th>Descripción</th>' : ''}<th class="q">Cantidad</th><th>Escaneos</th><th>Último</th><th></th></tr>`;
-    rows.forEach((r, i) => {
-      const unk = isUnknown(r.c);
-      h += `<tr data-c="${esc(r.c)}" class="${unk ? 'unk' : ''}"><td class="num">${i + 1}</td><td class="code">${esc(r.c)} ${r.m ? '<span class="badge m" title="Añadida o corregida a mano">manual</span>' : ''}${unk ? ' <span class="badge u">⚠ no está en catálogo</span>' : ''}</td>
-        ${CAT ? `<td class="desc">${esc(descOf(r.c))}</td>` : ''}
-        <td class="q" data-a="edit" title="Clic para corregir">${fmtN(r.q)}</td><td class="sm">${r.n}</td><td class="sm">${fmtT(r.t)}</td>
-        <td class="act">${unk ? '<button data-a="link" title="Asignar su código ERP">🔗 Asignar</button> ' : ''}<button data-a="dec" title="Restar 1">−1</button> <button data-a="inc" title="Sumar 1">+1</button> <button data-a="edit" title="Corregir cantidad">✎</button> <button data-a="del" title="Eliminar línea">🗑</button></td></tr>`;
-    });
-    $('#count').textContent = `${rows.length} de ${z.items.length} líneas` + unknownNote(rows);
-  }
-  tb.innerHTML = h || `<tr><td colspan="8" class="noitems">${q ? 'Ningún código coincide con la búsqueda.' : 'Todavía no hay productos. ¡Empieza a escanear!'}</td></tr>`;
-  if (flashCode){
-    const tr = tb.querySelector(`tr[data-c="${CSS.escape(flashCode)}"]`);
-    if (tr){ tr.classList.add('flash'); tr.scrollIntoView({block:'nearest'}); }
-  }
-}
-
-/* ================= Foco del escáner ================= */
-const scan = $('#scan');
-// En móvil/tablet no forzamos el foco: abriría el teclado en pantalla a cada toque
+const fold = s => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 const TOUCH = matchMedia('(pointer: coarse)').matches;
-const camOpen = () => !$('#cam').hidden;
-function focusScan(force){
-  if (TOUCH && !force) return;
-  if (activeZone() && !document.querySelector('dialog[open]') && !camOpen()) scan.focus();
-}
-function updateFocus(){
-  const area = $('#scanArea'), z = activeZone(); if (!z) return;
-  area.classList.remove('ready', 'notready');
-  if (z.done){ $('#focusWarn').textContent = '🔒 Zona terminada: no se puede escanear. Pulsa "Reabrir zona" si necesitas añadir algo.'; return; }
-  const ok = document.activeElement === scan;
-  if (TOUCH && !ok){ $('#focusWarn').textContent = '📷 Pulsa «Escanear con cámara». Si usas una pistola Bluetooth, toca antes la casilla del código.'; return; }
-  area.classList.add(ok ? 'ready' : 'notready');
-  $('#focusWarn').textContent = ok ? '● LISTO PARA ESCANEAR' : '● NO LISTO — haz clic en la casilla del código antes de escanear';
-}
-scan.addEventListener('focus', updateFocus);
-scan.addEventListener('blur', () => setTimeout(updateFocus, 50));
+const IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let toastTimer;
+function toast(msg, ms){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), ms || 2800); }
+const normUser = u => fold(u).trim().replace(/\s+/g, '.').replace(/[^a-z0-9._-]/g, '');
 
-scan.addEventListener('keydown', e => {
-  if (e.key !== 'Enter' && e.key !== 'Tab') return;
-  e.preventDefault();
-  const v = scan.value.trim(); scan.value = '';
-  if (!v) return;
-  const m = v.match(/^[*xX]\s*(-?\d+(?:[.,]\d+)?)$/);
-  if (m){ $('#qty').value = m[1]; showLast('', `Próximo escaneo contará <b class="big">${esc(m[1])}</b> unidades`); return; }
-  const qty = parseQty($('#qty').value);
-  if (!isFinite(qty) || qty === 0){ fail('La cantidad no es válida. Pon un número en "Cantidad".'); return; }
-  addScan(v, qty, false);
-  if (!$('#fixQty').checked) $('#qty').value = '1';
-});
-$('#qty').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); focusScan(); } });
-$('#qty').addEventListener('focus', e => e.target.select());
+// IndexedDB (catálogo en caché para trabajar sin internet)
+function idb(){ return new Promise((res, rej) => { const r = indexedDB.open('inventarioAgil', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+async function idbGet(k){ const db = await idb(); return new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); }
+async function idbSet(k, v){ const db = await idb(); return new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); }); }
 
-// Clic en cualquier zona "vacía" devuelve el foco al escáner; teclas sueltas también van al escáner
-document.addEventListener('click', e => {
-  setTimeout(() => {
-    if (document.querySelector('dialog[open]')) return;
-    const ae = document.activeElement;
-    if (!ae || ae === document.body || ae.tagName === 'BUTTON') focusScan();
-  }, 0);
-});
-document.addEventListener('keydown', e => {
-  const ae = document.activeElement;
-  const inText = ae && (ae.tagName === 'INPUT' && !['checkbox','file'].includes(ae.type) || ae.tagName === 'TEXTAREA');
-  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z'){
-    if (!inText || (ae === scan && !scan.value)){ e.preventDefault(); undo(); }
-    return;
+// Opciones de este dispositivo
+const OPTS = Object.assign({sound:true, codeText:true, skipZero:false}, (() => { try{ return JSON.parse(localStorage.getItem('inv.opts')) || {}; }catch(e){ return {}; } })());
+const saveOpts = () => { try{ localStorage.setItem('inv.opts', JSON.stringify(OPTS)); }catch(e){} };
+
+/* ================= Sesión ================= */
+let ME = null;            // {id, username, display_name, role}
+const isAdmin = () => ME && ME.role === 'admin';
+const emailOf = u => `${u}@${EMAIL_DOMAIN}`;
+
+async function fnCall(body){
+  const {data, error} = await SB.functions.invoke('inv-admin', {body});
+  if (error){
+    let msg = error.message;
+    try{ const j = await error.context.json(); if (j && j.error) msg = j.error; }catch(e){}
+    throw new Error(msg);
   }
-  if (!inText && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey && activeZone() && !document.querySelector('dialog[open]') && !camOpen() && ae.tagName !== 'SELECT'){
-    scan.focus();   // también en móvil: una pistola Bluetooth escribe como un teclado
+  if (data && data.error) throw new Error(data.error);
+  return data;
+}
+
+async function boot(){
+  const {data:{session}} = await SB.auth.getSession();
+  if (session){
+    const cached = (() => { try{ return JSON.parse(localStorage.getItem('inv.me')); }catch(e){ return null; } })();
+    try{
+      const {data, error} = await SB.from('inv_profiles').select('id, username, display_name, role, active').eq('id', session.user.id).maybeSingle();
+      if (error) throw error;
+      if (!data || !data.active){ await SB.auth.signOut(); showAuth('Tu usuario está desactivado. Habla con el administrador.'); return; }
+      ME = data; localStorage.setItem('inv.me', JSON.stringify(ME));
+    }catch(e){
+      if (cached && cached.id === session.user.id) ME = cached;   // sin internet: seguimos con el perfil guardado
+      else { showAuth(); return; }
+    }
+    startApp(); return;
   }
-});
-
-/* ================= Eventos de la interfaz ================= */
-$('#device').value = S.device || '';
-$('#device').addEventListener('input', e => { S.device = e.target.value; changed(); });
-$('#device').addEventListener('keydown', e => { if (e.key === 'Enter') focusScan(); });
-
-$('#newZoneForm').addEventListener('submit', e => { e.preventDefault(); createZone($('#newZoneName').value); $('#newZoneName').value = ''; });
-$('#emptyZoneForm').addEventListener('submit', e => { e.preventDefault(); const i = $('#emptyZoneName'); i.blur(); createZone(i.value); i.value = ''; });
-$('#zoneList').addEventListener('click', e => { const it = e.target.closest('[data-z]'); if (it){ selectZone(it.dataset.z); closeDrawer(); } });
-// Menú lateral en móvil
-function openDrawer(){ $('#drawer').classList.add('open'); $('#drawerBg').classList.add('open'); }
-function closeDrawer(){ $('#drawer').classList.remove('open'); $('#drawerBg').classList.remove('open'); }
-$('#menuBtn').addEventListener('click', openDrawer);
-$('#drawerBg').addEventListener('click', closeDrawer);
-$('#newZoneForm').addEventListener('submit', () => setTimeout(closeDrawer, 0));
-
-$('#zRename').addEventListener('click', () => {
-  const z = activeZone(); if (!z) return;
-  const n = prompt('Nuevo nombre de la zona:', z.name);
-  if (n && n.trim()){ z.name = n.trim(); changed(); render(); }
-});
-$('#zDone').addEventListener('click', () => {
-  const z = activeZone(); if (!z) return;
-  z.done = !z.done; changed(); render();
-  toast(z.done ? `Zona "${z.name}" marcada como terminada` : `Zona "${z.name}" reabierta`);
-});
-$('#zDelete').addEventListener('click', () => {
-  const z = activeZone(); if (!z) return;
-  if (!confirm(`¿Eliminar la zona "${z.name}" con ${z.items.length} líneas y ${fmtN(zoneUnits(z))} unidades?\n\n(Irá a la papelera de Ajustes por si te equivocas.)`)) return;
-  S.trash.unshift({zone:z, deleted:now()}); S.trash = S.trash.slice(0, 30);
-  S.zones = S.zones.filter(x => x !== z); S.active = null;
-  changed(); render(); toast('Zona eliminada (recuperable en Ajustes → Papelera)');
-});
-$('#zExport').addEventListener('click', () => { const z = activeZone(); if (z) exportZone(z); });
-$('#tExport').addEventListener('click', exportConsolidated);
-$('#tExport2').addEventListener('click', exportAllSheets);
-$('#expAllSheets').addEventListener('click', exportAllSheets);
-$('#expAllZip').addEventListener('click', exportAllZip);
-$('#expConsol').addEventListener('click', exportConsolidated);
-$('#undoBtn').addEventListener('click', undo);
-$('#search').addEventListener('input', () => renderTable());
-$('#search').addEventListener('keydown', e => { if (e.key === 'Escape'){ e.target.value = ''; renderTable(); focusScan(); } });
-$('#sort').addEventListener('change', e => { S.sort = e.target.value; changed(); renderTable(); });
-
-$('#manualForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const c = $('#mCode').value.trim(), q = parseQty($('#mQty').value);
-  if (!c){ $('#mCode').focus(); return; }
-  if (!isFinite(q) || q === 0){ fail('Cantidad manual no válida.'); return; }
-  addScan(c, q, true);
-  $('#mCode').value = ''; $('#mQty').value = '1'; $('#mCode').focus();
-});
-
-$('#tbody').addEventListener('click', e => {
-  const b = e.target.closest('[data-a]'); if (!b) return;
-  const tr = b.closest('tr'); const code = tr && tr.dataset.c; if (!code) return;
-  const z = activeZone(); if (!z) return;
-  const it = z.items.find(x => x.c === code); if (!it) return;
-  const a = b.dataset.a;
-  if (a === 'inc') setItemQty(code, it.q + 1, 'Sumado 1');
-  else if (a === 'dec') setItemQty(code, it.q - 1, 'Restado 1');
-  else if (a === 'del') deleteItem(code);
-  else if (a === 'link') linkUnknown(code);
-  else if (a === 'edit') startEdit(tr, it);
-});
-function startEdit(tr, it){
-  if (!guard(activeZone())) return;
-  const td = tr.querySelector('td.q'); if (td.querySelector('input')) return;
-  td.innerHTML = `<input value="${esc(String(it.q))}">`;
-  const inp = td.querySelector('input'); inp.focus(); inp.select();
-  let finished = false;
-  const finish = ok => {
-    if (finished) return; finished = true;
-    const v = parseQty(inp.value);
-    if (ok && isFinite(v) && v !== it.q) setItemQty(it.c, v, 'Corregido');
-    else renderTable();
-    focusScan();
-  };
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); finish(true); } else if (e.key === 'Escape') finish(false); });
-  inp.addEventListener('blur', () => finish(true));
+  showAuth();
 }
 
-/* ================= Diálogos ================= */
-document.querySelectorAll('dialog').forEach(d => {
-  d.addEventListener('click', e => { if (e.target.closest('[data-close]') || e.target === d) d.close(); });
-  d.addEventListener('close', () => focusScan());
-});
-$('#helpBtn').addEventListener('click', () => $('#helpDlg').showModal());
-$('#settingsBtn').addEventListener('click', () => { renderSettings(); $('#settingsDlg').showModal(); });
-function renderSettings(){
-  $('#optText').checked = S.opts.codeText; $('#optSound').checked = S.opts.sound; $('#optZero').checked = S.opts.skipZero; $('#optBlock').checked = S.opts.blockUnknown;
-  $('#trashList').innerHTML = S.trash.length ? S.trash.map((t, i) =>
-    `<div class="trash-item"><span><b>${esc(t.zone.name)}</b> · ${t.zone.items.length} líneas · eliminada ${fmtDT(t.deleted)}</span><button data-restore="${i}">Recuperar</button></div>`).join('')
-    : '<p style="color:var(--muted)">La papelera está vacía.</p>';
-}
-$('#optText').addEventListener('change', e => { S.opts.codeText = e.target.checked; changed(); });
-$('#optSound').addEventListener('change', e => { S.opts.sound = e.target.checked; changed(); });
-$('#optZero').addEventListener('change', e => { S.opts.skipZero = e.target.checked; changed(); });
-$('#optBlock').addEventListener('change', e => { S.opts.blockUnknown = e.target.checked; changed(); });
-$('#trashList').addEventListener('click', e => {
-  const b = e.target.closest('[data-restore]'); if (!b) return;
-  const t = S.trash.splice(+b.dataset.restore, 1)[0];
-  S.zones.push(t.zone); changed(); render(); renderSettings(); toast(`Zona "${t.zone.name}" recuperada`);
-});
-
-/* ================= Sonido y avisos ================= */
-let actx = null;
-function beep(kind){
-  try{ navigator.vibrate && navigator.vibrate(kind === 'new' ? 70 : kind === 'rep' ? [50, 70, 50] : [250, 80, 250]); }catch(e){}
-  if (!S.opts.sound) return;
+async function showAuth(msg){
+  $('#appView').hidden = true; $('#authView').hidden = false;
+  $('#lErr').textContent = msg || '';
   try{
-    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
-    const seq = kind === 'new' ? [[1300, .09]] : kind === 'rep' ? [[880, .07], [0, .05], [880, .07]] : [[180, .35]];
-    let t = actx.currentTime;
-    for (const [f, d] of seq){
-      if (f){
-        const o = actx.createOscillator(), g = actx.createGain();
-        o.type = kind === 'err' ? 'square' : 'sine'; o.frequency.value = f;
-        g.gain.setValueAtTime(.18, t); g.gain.exponentialRampToValueAtTime(.001, t + d);
-        o.connect(g).connect(actx.destination); o.start(t); o.stop(t + d);
+    const st = await fnCall({action:'status'});
+    $('#setupForm').hidden = st.hasAdmin; $('#loginForm').hidden = !st.hasAdmin;
+  }catch(e){ $('#setupForm').hidden = true; $('#loginForm').hidden = false; if (!msg) $('#lErr').textContent = navigator.onLine ? '' : 'Sin conexión: necesitas internet para entrar la primera vez.'; }
+}
+
+$('#loginForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const u = normUser($('#lUser').value), p = $('#lPin').value.trim();
+  if (!u || !/^\d{6}$/.test(p)){ $('#lErr').textContent = 'Escribe tu usuario y tu PIN de 6 números.'; return; }
+  $('#lBtn').disabled = true; $('#lErr').textContent = '';
+  const {error} = await SB.auth.signInWithPassword({email:emailOf(u), password:p});
+  $('#lBtn').disabled = false;
+  if (error){ $('#lErr').textContent = /invalid/i.test(error.message) ? 'Usuario o PIN incorrectos.' : /banned/i.test(error.message) ? 'Usuario desactivado. Habla con el administrador.' : 'No se ha podido entrar: ' + error.message; return; }
+  $('#lPin').value = '';
+  boot();
+});
+$('#setupForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const n = $('#sName').value.trim(), u = normUser($('#sUser').value), p = $('#sPin').value.trim();
+  if (!n || u.length < 2){ $('#sErr').textContent = 'Escribe tu nombre y un usuario (mínimo 2 letras).'; return; }
+  if (!/^\d{6}$/.test(p)){ $('#sErr').textContent = 'El PIN debe tener 6 números.'; return; }
+  if (p !== $('#sPin2').value.trim()){ $('#sErr').textContent = 'Los dos PIN no coinciden.'; return; }
+  $('#sBtn').disabled = true; $('#sErr').textContent = '';
+  try{
+    await fnCall({action:'setup', name:n, username:u, pin:p});
+    const {error} = await SB.auth.signInWithPassword({email:emailOf(u), password:p});
+    if (error) throw error;
+    boot();
+  }catch(err){ $('#sErr').textContent = err.message; }
+  $('#sBtn').disabled = false;
+});
+$('#logoutBtn').addEventListener('click', async () => {
+  const pend = L.outbox.length;
+  if (!confirm(pend ? `⚠ Hay ${pend} envíos pendientes que aún no han llegado al servidor. Si cierras sesión se quedarán guardados en este dispositivo y se enviarán cuando vuelvas a entrar.\n\n¿Cerrar sesión?` : '¿Cerrar sesión en este dispositivo?')) return;
+  saveNow(); $('#userDlg').close();
+  await SB.auth.signOut().catch(() => {});
+  localStorage.removeItem('inv.me'); ME = null; location.reload();
+});
+SB.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT' && ME){ ME = null; location.reload(); } });
+
+/* ================= Datos locales del usuario (zonas en curso) ================= */
+let L = null;   // {zones:[], active, undo:[], outbox:[]}
+const lkey = () => 'inv.v2.' + ME.id;
+let dirty = false, saveTimer = null;
+function loadLocal(){
+  try{ L = JSON.parse(localStorage.getItem(lkey())); }catch(e){ L = null; }
+  L = Object.assign({zones:[], active:null, undo:[], outbox:[]}, L || {});
+  // Traer zonas de la versión anterior de la app (sin usuarios), una sola vez
+  try{
+    const old = JSON.parse(localStorage.getItem('inventarioAgil.v1'));
+    if (old && old.zones && old.zones.some(z => z.items && z.items.length) && !localStorage.getItem('inv.migrated')){
+      if (confirm(`En este dispositivo hay ${old.zones.length} zonas de la versión anterior de la app. ¿Pasarlas a tu usuario (${ME.display_name})?`)){
+        for (const z of old.zones) if (z.items.length) L.zones.push({id:uid(), name:z.name, created:z.created || now(), status:'open', items:z.items});
       }
-      t += d;
+      localStorage.setItem('inv.migrated', '1');
     }
   }catch(e){}
 }
-let toastTimer;
-function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2600); }
+function changed(){ dirty = true; clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 200); }
+function saveNow(){
+  if (!L || !ME) return false;
+  clearTimeout(saveTimer);
+  try{ localStorage.setItem(lkey(), JSON.stringify(L)); dirty = false; return true; }
+  catch(e){ toast('⚠ No se ha podido guardar en el dispositivo: ' + e.message, 6000); return false; }
+}
+setInterval(() => { if (dirty) saveNow(); }, 15000);
+setInterval(() => saveNow(), 5 * 60 * 1000);   // guardado de seguridad cada 5 minutos
+window.addEventListener('beforeunload', () => { if (dirty) saveNow(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && dirty) saveNow(); });
+$('#saveBtn').addEventListener('click', () => { if (saveNow()) toast('💾 Guardado en este dispositivo'); });
 
-/* ================= Generador de Excel (.xlsx) sin librerías ================= */
-const enc = new TextEncoder();
-const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++){ let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
-function crc32(b){ let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
-function zipBytes(files){
-  const d = new Date();
-  const dosTime = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
-  const dosDate = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
-  const parts = [], central = []; let offset = 0;
-  for (const f of files){
-    const name = enc.encode(f.name), data = typeof f.data === 'string' ? enc.encode(f.data) : f.data, crc = crc32(data);
-    const lh = new DataView(new ArrayBuffer(30));
-    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
-    lh.setUint16(10, dosTime, true); lh.setUint16(12, dosDate, true); lh.setUint32(14, crc, true);
-    lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
-    parts.push(new Uint8Array(lh.buffer), name, data);
-    const ch = new DataView(new ArrayBuffer(46));
-    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
-    ch.setUint16(12, dosTime, true); ch.setUint16(14, dosDate, true); ch.setUint32(16, crc, true);
-    ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, name.length, true);
-    ch.setUint16(30, 0, true); ch.setUint16(32, 0, true); ch.setUint16(34, 0, true); ch.setUint16(36, 0, true); ch.setUint32(38, 0, true); ch.setUint32(42, offset, true);
-    central.push(new Uint8Array(ch.buffer), name);
-    offset += 30 + name.length + data.length;
-  }
-  const cdSize = central.reduce((a, b) => a + b.length, 0);
-  const eo = new DataView(new ArrayBuffer(22));
-  eo.setUint32(0, 0x06054b50, true); eo.setUint16(4, 0, true); eo.setUint16(6, 0, true);
-  eo.setUint16(8, files.length, true); eo.setUint16(10, files.length, true); eo.setUint32(12, cdSize, true); eo.setUint32(16, offset, true); eo.setUint16(20, 0, true);
-  const all = [...parts, ...central, new Uint8Array(eo.buffer)];
-  const out = new Uint8Array(all.reduce((a, b) => a + b.length, 0)); let p = 0;
-  for (const a of all){ out.set(a, p); p += a.length; }
-  return out;
-}
-const xe = s => String(s).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function sheetNames(names){
-  const used = new Set();
-  return names.map(n => {
-    let b = String(n).replace(/[\[\]:*?\/\\]/g, '-').replace(/^'+|'+$/g, '').trim().slice(0, 31) || 'Zona';
-    let s = b, i = 2;
-    while (used.has(s.toLowerCase())){ const suf = ` (${i++})`; s = b.slice(0, 31 - suf.length) + suf; }
-    used.add(s.toLowerCase()); return s;
-  });
-}
-function sheetXml(rows){
-  let x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols><col min="1" max="1" width="22" customWidth="1"/><col min="2" max="2" width="12" customWidth="1"/></cols><sheetData>';
-  rows.forEach((r, i) => {
-    const n = i + 1, c = String(r[0]);
-    const asNum = !S.opts.codeText && /^[1-9]\d{0,14}$/.test(c);
-    const a = asNum ? `<c r="A${n}"><v>${c}</v></c>` : `<c r="A${n}" t="inlineStr"><is><t>${xe(c)}</t></is></c>`;
-    x += `<row r="${n}">${a}<c r="B${n}"><v>${Number(r[1])}</v></c></row>`;
-  });
-  return x + '</sheetData></worksheet>';
-}
-function buildXlsx(sheets){
-  const H = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
-  const names = sheetNames(sheets.map(s => s.name));
-  const files = [
-    {name:'[Content_Types].xml', data: H + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
-      sheets.map((s, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('') + '</Types>'},
-    {name:'_rels/.rels', data: H + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
-    {name:'xl/workbook.xml', data: H + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' +
-      names.map((n, i) => `<sheet name="${xe(n)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('') + '</sheets></workbook>'},
-    {name:'xl/_rels/workbook.xml.rels', data: H + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
-      sheets.map((s, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('') +
-      `<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`},
-    {name:'xl/styles.xml', data: H + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'},
-    ...sheets.map((s, i) => ({name:`xl/worksheets/sheet${i + 1}.xml`, data: sheetXml(s.rows)}))
-  ];
-  return zipBytes(files);
-}
-
-/* ================= Exportaciones ================= */
-const safe = s => String(s).replace(/[\\\/:*?"<>|]+/g, '-').replace(/\s+/g, '_').trim().slice(0, 60) || 'sin_nombre';
-function stamp(){ const d = new Date(), p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`; }
-const devPart = () => S.device.trim() ? '_' + safe(S.device) : '';
-const IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-async function download(bytes, name, type){
-  // En iPhone/iPad las descargas desde una app instalada fallan: se usa "Compartir" (Guardar en Archivos, correo, WhatsApp…)
-  if (IOS && navigator.canShare){
-    try{
-      const file = new File([bytes], name, {type});
-      if (navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:name}); return; }
-    }catch(e){ if (e && e.name === 'AbortError') return; }
-  }
-  const url = URL.createObjectURL(new Blob([bytes], {type}));
-  const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
-}
-const XLSX_T = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-function zoneRows(z){
-  return z.items.filter(it => !(S.opts.skipZero && it.q === 0))
-    .slice().sort((a, b) => a.c.localeCompare(b.c, 'es', {numeric:true})).map(it => [it.c, it.q]);
-}
-function zonesWithItems(){ const zs = S.zones.filter(z => zoneRows(z).length); if (!zs.length) toast('No hay productos para exportar'); return zs.length && okUnknown(zs) ? zs : []; }
-function okUnknown(zs){
-  if (!CAT) return true;
-  const n = zs.reduce((a, z) => a + z.items.filter(it => isUnknown(it.c)).length, 0);
-  return !n || confirm(`⚠ Hay ${n} líneas con códigos que NO están en el catálogo (seguramente códigos de proveedor sin código ERP). Si se exportan así, administración no podrá subirlas.\n\nPuedes asignarles su código con el botón 🔗 de cada línea roja.\n\n¿Exportar igualmente?`);
-}
-function exportZone(z){
-  if (!zoneRows(z).length){ toast('Esta zona está vacía'); return; }
-  if (!okUnknown([z])) return;
-  download(buildXlsx([{name:z.name, rows:zoneRows(z)}]), `Inventario_${safe(z.name)}${devPart()}_${stamp()}.xlsx`, XLSX_T);
-}
-function exportAllSheets(){
-  const zs = zonesWithItems(); if (!zs.length) return;
-  download(buildXlsx(zs.map(z => ({name:z.name, rows:zoneRows(z)}))), `Inventario_por_zonas${devPart()}_${stamp()}.xlsx`, XLSX_T);
-}
-function exportAllZip(){
-  const zs = zonesWithItems(); if (!zs.length) return;
-  const used = new Set();
-  const files = zs.map(z => {
-    let n = `Inventario_${safe(z.name)}${devPart()}.xlsx`, i = 2;
-    while (used.has(n.toLowerCase())) n = `Inventario_${safe(z.name)}_${i++}${devPart()}.xlsx`;
-    used.add(n.toLowerCase());
-    return {name:n, data:buildXlsx([{name:z.name, rows:zoneRows(z)}])};
-  });
-  download(zipBytes(files), `Inventario_zonas${devPart()}_${stamp()}.zip`, 'application/zip');
-}
-function exportConsolidated(){
-  const agg = new Map();
-  for (const z of S.zones) for (const it of z.items) agg.set(it.c, round((agg.get(it.c) || 0) + it.q));
-  let rows = [...agg.entries()].filter(([, q]) => !(S.opts.skipZero && q === 0)).sort((a, b) => a[0].localeCompare(b[0], 'es', {numeric:true}));
-  if (!rows.length){ toast('No hay productos para exportar'); return; }
-  if (!okUnknown(S.zones)) return;
-  download(buildXlsx([{name:'Inventario', rows}]), `Inventario_consolidado${devPart()}_${stamp()}.xlsx`, XLSX_T);
-}
-
-/* ================= Copias JSON: guardar / importar / juntar ================= */
-function backupObj(){ return {app:'inventario-agil', version:1, device:S.device, exported:now(), zones:S.zones, catExtra: CAT ? CAT.extra : {}}; }
-$('#expJson').addEventListener('click', () => {
-  download(enc.encode(JSON.stringify(backupObj(), null, 1)), `Copia_inventario${devPart()}_${stamp()}.json`, 'application/json');
-  toast('Copia guardada en Descargas');
-});
-$('#impJson').addEventListener('click', () => $('#impFile').click());
-$('#impFile').addEventListener('change', async e => {
-  const files = [...e.target.files]; e.target.value = '';
-  for (const f of files){
-    try{ importBackup(JSON.parse(await f.text()), f.name); }
-    catch(err){ alert(`No se ha podido leer "${f.name}": no es una copia válida.`); }
-  }
-});
-function importBackup(data, fname){
-  if (!data || data.app !== 'inventario-agil' || !Array.isArray(data.zones)) throw new Error('formato');
-  const src = data.device || 'otro equipo';
-  const key = `${data.device}|${data.exported}`;
-  if (S.importLog.includes(key) && !confirm(`"${fname}" ya se importó antes. Si lo importas otra vez, las cantidades se duplicarán. ¿Importar igualmente?`)) return;
-  const own = data.zones.filter(z => S.zones.some(x => x.id === z.id));
-  if (own.length && !confirm(`"${fname}" contiene zonas que ya están en este ordenador (${own.map(z => z.name).join(', ')}). Parece una copia de este mismo equipo y se sumarían dos veces. ¿Continuar?`)) return;
-  const clash = data.zones.filter(z => z.items && z.items.length && S.zones.some(x => x.name.toLowerCase() === z.name.toLowerCase()));
-  let merge = false;
-  if (clash.length){
-    merge = confirm(`Estas zonas de "${src}" tienen el mismo nombre que zonas que ya existen aquí:\n\n${clash.map(z => '• ' + z.name).join('\n')}\n\nACEPTAR = sumar sus cantidades en la misma zona\nCANCELAR = crearlas aparte como "nombre (${src})"`);
-  }
-  let nz = 0, nl = 0;
-  for (const z of data.zones){
-    if (!z || !Array.isArray(z.items)) continue;
-    const items = z.items.filter(it => it && it.c != null && isFinite(it.q)).map(it => ({c:String(it.c), q:+it.q, t:it.t || now(), n:it.n || 1, m:!!it.m}));
-    if (!items.length) continue;
-    const target = S.zones.find(x => x.name.toLowerCase() === String(z.name).toLowerCase());
-    if (target && merge){
-      for (const it of items){
-        const ex = target.items.find(x => x.c === it.c);
-        if (ex){ ex.q = round(ex.q + it.q); ex.n += it.n; ex.t = Math.max(ex.t, it.t); }
-        else target.items.push(it);
-        nl++;
-      }
-    } else {
-      S.zones.push({id:uid(), name: target ? `${z.name} (${src})` : z.name, created:z.created || now(), done:!!z.done, items});
-      nz++; nl += items.length;
-    }
-  }
-  S.importLog.push(key);
-  if (CAT && data.catExtra){ for (const [k, v] of Object.entries(data.catExtra)) if (!(k in CAT.extra)) CAT.extra[k] = v; saveCat(); renderCatBox(); }
-  changed(); render();
-  alert(`Importado desde "${src}": ${nz} zonas nuevas, ${nl} líneas.`);
-}
-
-/* ================= Copia automática en archivo (Chrome / Edge) ================= */
-let fileHandle = null, fileTimer = null;
-function scheduleFileBackup(){ if (!fileHandle) return; clearTimeout(fileTimer); fileTimer = setTimeout(writeFileBackup, 3000); }
-async function writeFileBackup(){
-  if (!fileHandle) return;
-  try{ const w = await fileHandle.createWritable(); await w.write(JSON.stringify(backupObj())); await w.close(); $('#fileBackupBtn').textContent = '🛟 Copia en archivo: SÍ (' + fmtT(now()) + ')'; }
-  catch(e){ fileHandle = null; $('#fileBackupBtn').textContent = '🛟 Copia automática en archivo: NO'; toast('Se ha perdido el acceso al archivo de copia; vuelve a activarlo'); }
-}
-$('#fileBackupBtn').addEventListener('click', async () => {
-  if (!window.showSaveFilePicker){ alert('Tu navegador no permite esta función. Usa Google Chrome o Microsoft Edge, o guarda copias .json a mano de vez en cuando.'); return; }
-  try{
-    fileHandle = await showSaveFilePicker({suggestedName:`Copia_auto_inventario${devPart()}.json`, types:[{description:'Copia de inventario', accept:{'application/json':['.json']}}]});
-    await writeFileBackup(); toast('Copia automática activada: se actualizará tras cada cambio');
-  }catch(e){ /* cancelado */ }
-});
-
-/* ================= Vaciar todo ================= */
-$('#wipeBtn').addEventListener('click', () => {
-  const lines = S.zones.reduce((a, z) => a + z.items.length, 0);
-  if (!S.zones.length){ toast('No hay nada que borrar'); return; }
-  const r = prompt(`Vas a BORRAR TODAS las zonas (${S.zones.length} zonas, ${lines} líneas) para empezar un inventario nuevo.\n\nAntes se descargará automáticamente una copia .json de seguridad.\n\nEscribe BORRAR para confirmar:`);
-  if (!r || r.trim().toUpperCase() !== 'BORRAR') return;
-  download(enc.encode(JSON.stringify(backupObj(), null, 1)), `Copia_ANTES_DE_BORRAR${devPart()}_${stamp()}.json`, 'application/json');
-  const keep = {device:S.device, opts:S.opts, sort:S.sort};
-  S = Object.assign(blank(), keep);
-  changed(); render(); toast('Inventario vaciado. Copia de seguridad en Descargas.');
-});
-
-/* ================= Catálogo de productos (código proveedor → código ERP) ================= */
-let CAT = null;   // {name, loaded, rows:[[erp, desc, [barcodes]]], extra:{barcode: erp}} + índices
+/* ================= Catálogo compartido ================= */
+let CAT = null;          // {name, loaded, by, rows:[[erp,desc,[bcs]]], erpN, bc, desc}
+let CATV = -1;           // versión del catálogo en el servidor
+let MAPS = [];           // códigos asignados [{barcode, raw_barcode, erp, created_by_name, created_at}]
+let EXTRA = Object.create(null);  // barcode normalizado → erp
 const norm = c => { let s = String(c).trim().toUpperCase(); if (/^\d+$/.test(s)) s = s.replace(/^0+(?=\d)/, ''); return s; };
 function buildCatIndex(c){
-  c.erpN = Object.create(null); c.bc = Object.create(null); c.desc = Object.create(null); c.extra = c.extra || {};
+  c.erpN = Object.create(null); c.bc = Object.create(null); c.desc = Object.create(null);
   for (const [erp, d] of c.rows){ c.erpN[norm(erp)] = erp; if (d) c.desc[erp] = d; }
   for (const [erp, , bcs] of c.rows) for (const b of bcs || []){ const k = norm(b); if (!(k in c.bc)) c.bc[k] = erp; }
   return c;
 }
 function resolve(raw){
-  if (!CAT) return {code:raw, status:'nocat'};
   const k = norm(raw);
-  if (k in CAT.erpN) return {code:CAT.erpN[k], status:'erp'};
-  const m = CAT.extra[k] || CAT.bc[k];
+  if (CAT && k in CAT.erpN) return {code:CAT.erpN[k], status:'erp'};
+  const m = EXTRA[k] || (CAT && CAT.bc[k]);
   if (m) return {code:m, status:'map'};
-  return {code:raw, status:'unknown'};
+  return {code:raw, status: CAT ? 'unknown' : 'nocat'};
 }
 const descOf = c => CAT ? (CAT.desc[c] || CAT.desc[CAT.erpN[norm(c)]] || '') : '';
 const isUnknown = c => !!CAT && !(norm(c) in CAT.erpN);
-const match = (c, q) => !q || c.toLowerCase().includes(q) || (!!CAT && descOf(c).toLowerCase().includes(q));
-function unknownNote(rows){ const n = rows.filter(r => isUnknown(r.c)).length; return n ? ` · ⚠ ${n} sin catálogo` : ''; }
+function setMaps(rows){ MAPS = rows || []; EXTRA = Object.create(null); for (const m of MAPS) EXTRA[m.barcode] = m.erp; }
 
-// Guardado del catálogo en IndexedDB (aguanta catálogos grandes)
-function idb(){ return new Promise((res, rej) => { const r = indexedDB.open('inventarioAgil', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
-async function idbGet(k){ const db = await idb(); return new Promise((res, rej) => { const q = db.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); }); }
-async function idbSet(k, v){ const db = await idb(); return new Promise((res, rej) => { const tx = db.transaction('kv', 'readwrite'); tx.objectStore('kv').put(v, k); tx.oncomplete = () => res(); tx.onerror = () => rej(tx.error); }); }
-async function saveCat(){
-  try{ await idbSet('catalog', CAT ? {name:CAT.name, loaded:CAT.loaded, rows:CAT.rows, extra:CAT.extra} : null); }
-  catch(e){ alert('⚠ No se ha podido guardar el catálogo en este ordenador: ' + e.message); }
+async function loadCatalogCache(){
+  try{
+    const c = await idbGet('inv.catalog'); if (c){ CATV = c.version; CAT = c.rows && c.rows.length ? buildCatIndex(c) : null; }
+    const m = await idbGet('inv.maps'); if (m) setMaps(m);
+  }catch(e){ console.warn(e); }
 }
-function renderCatBox(){
-  const b = $('#catBox');
-  if (!CAT){
-    b.className = 'catbox';
-    b.innerHTML = '<div class="ct">Sin catálogo</div>Se apunta exactamente el código que lee la pistola. Carga el Excel de productos para que los códigos de proveedor se apunten con su código ERP.';
-  } else {
-    const nb = Object.keys(CAT.bc).length, nx = Object.keys(CAT.extra).length;
-    b.className = 'catbox on';
-    b.innerHTML = `<div class="ct">✔ ${CAT.rows.length.toLocaleString('es-ES')} productos</div>${nb.toLocaleString('es-ES')} códigos de proveedor${nx ? ` · ${nx} asignados a mano` : ''}<br><small>${esc(CAT.name)} · ${fmtDT(CAT.loaded)}</small>`;
+let catSyncing = false;
+async function syncCatalog(force){
+  if (catSyncing) return; catSyncing = true;
+  try{
+    const {data:v, error} = await SB.from('inv_catalog_version').select('version').eq('id', 1).single();
+    if (error) throw error;
+    if (force || v.version !== CATV){
+      const {data, error:e2} = await SB.from('inv_catalog').select('file_name, row_count, data, version, updated_at, updated_by_name').eq('id', 1).single();
+      if (e2) throw e2;
+      const first = CATV === -1;
+      CATV = data.version;
+      const c = {name:data.file_name, loaded:Date.parse(data.updated_at), by:data.updated_by_name, rows:data.data || [], version:data.version};
+      CAT = c.rows.length ? buildCatIndex(c) : null;
+      await idbSet('inv.catalog', {name:c.name, loaded:c.loaded, by:c.by, rows:c.rows, version:c.version});
+      if (!first) toast(`📋 Catálogo actualizado: ${c.rows.length.toLocaleString('es-ES')} productos`, 4000);
+      renderAll();
+    }
+  }catch(e){ console.warn('syncCatalog', e); }
+  catSyncing = false;
+}
+async function syncMaps(){
+  try{
+    const {data, error} = await SB.from('inv_barcode_map').select('barcode, raw_barcode, erp, created_by_name, created_at').order('created_at', {ascending:false});
+    if (error) throw error;
+    // conservar las asignaciones locales que aún no han llegado al servidor
+    const pend = L ? L.outbox.filter(o => o.t === 'map').map(o => o.p) : [];
+    setMaps([...pend.filter(p => !data.some(d => d.barcode === p.barcode)), ...data]);
+    await idbSet('inv.maps', MAPS);
+    if (isAdmin()) renderMaps();
+  }catch(e){ console.warn('syncMaps', e); }
+}
+
+/* ================= Envíos pendientes (funciona sin internet) ================= */
+let flushing = false, online = navigator.onLine;
+async function flushOutbox(){
+  if (flushing || !L || !L.outbox.length) { renderSync(); return; }
+  flushing = true; renderSync();
+  for (const o of L.outbox.slice()){
+    try{
+      let r;
+      if (o.t === 'sub') r = await SB.from('inv_submissions').upsert(o.p, {onConflict:'client_id', ignoreDuplicates:true});
+      else if (o.t === 'map') r = await SB.from('inv_barcode_map').upsert(o.p, {onConflict:'barcode', ignoreDuplicates:true});
+      if (r.error) throw r.error;
+      L.outbox = L.outbox.filter(x => x !== o);
+      if (o.t === 'sub'){ const z = L.zones.find(z => z.id === o.p.client_id); if (z){ z.status = 'sent'; z.sentAt = now(); } toast(`✔ Zona «${o.p.zone}» enviada`); }
+      online = true; changed();
+    }catch(e){ console.warn('flush', e); online = navigator.onLine && !/fetch|network/i.test(String(e.message || e)) ? online : false; break; }
   }
-  $('#catApplyBtn').hidden = $('#catClearBtn').hidden = !CAT;
+  flushing = false; renderSync(); renderHome(); if (curZone()) renderZone();
+}
+function renderSync(){
+  const p = $('#syncPill'), n = L ? L.outbox.length : 0;
+  if (flushing){ p.className = 'pill busy'; p.textContent = '🔄 Enviando…'; return; }
+  if (!navigator.onLine || !online){ p.className = 'pill off'; p.textContent = n ? `🟠 Sin conexión · ${n} pendiente${n > 1 ? 's' : ''}` : '🟠 Sin conexión'; return; }
+  p.className = 'pill on'; p.textContent = n ? `🟠 ${n} pendiente${n > 1 ? 's' : ''}` : '🟢 Conectado';
+}
+window.addEventListener('online', () => { online = true; flushOutbox(); syncCatalog(); syncMaps(); });
+window.addEventListener('offline', () => { online = false; renderSync(); });
+
+/* ================= Arranque de la app ================= */
+let RT = null;
+async function startApp(){
+  $('#authView').hidden = true; $('#appView').hidden = false;
+  $('#userName').textContent = ME.display_name;
+  $('#tabs').hidden = !isAdmin();
+  loadLocal();
+  await loadCatalogCache();
+  renderAll(); showTab('count');
+  syncCatalog(); syncMaps(); flushOutbox();
+  if (isAdmin()){ loadSubs(); }
+  if (!RT){
+    RT = SB.channel('inv-cambios')
+      .on('postgres_changes', {event:'*', schema:'public', table:'inv_catalog_version'}, () => syncCatalog())
+      .on('postgres_changes', {event:'*', schema:'public', table:'inv_barcode_map'}, () => syncMaps())
+      .on('postgres_changes', {event:'*', schema:'public', table:'inv_submissions'}, () => { if (isAdmin()) loadSubs(); })
+      .subscribe(st => { if (st === 'SUBSCRIBED'){ online = true; renderSync(); } });
+  }
+  setInterval(() => { syncCatalog(); flushOutbox(); }, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden){ syncCatalog(); syncMaps(); flushOutbox(); if (isAdmin()) loadSubs(); } });
+}
+
+/* ================= Pestañas (admin) ================= */
+let TAB = 'count';
+function showTab(t){
+  TAB = t;
+  document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  const z = curZone();
+  $('#homeView').hidden = !(t === 'count' && !z);
+  $('#zoneView').hidden = !(t === 'count' && z);
+  $('#subsView').hidden = t !== 'subs';
+  $('#catView').hidden = t !== 'cat';
+  $('#usersView').hidden = t !== 'users';
+  $('#mapsView').hidden = t !== 'maps';
+  $('#finishBar').hidden = !(t === 'count' && z && z.status === 'open');
+  if (t === 'users') loadUsers();
+  if (t === 'cat') renderCat();
+  if (t === 'maps') renderMaps();
+  if (t === 'subs') renderSubs();
+  window.scrollTo(0, 0);
+}
+$('#tabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); });
+function renderAll(){ renderSync(); renderCatNotice(); if (!L) return; renderHome(); if (curZone()) renderZone(); if (isAdmin()){ renderCat(); renderSubs(); } }
+
+/* ================= Mis zonas ================= */
+const curZone = () => L && L.active ? L.zones.find(z => z.id === L.active) || null : null;
+const zoneUnits = z => round(z.items.reduce((a, it) => a + it.q, 0));
+function renderCatNotice(){
+  const el = $('#catNotice'); if (!el) return;
+  el.innerHTML = CAT ? '' : `<div class="notice warn">⚠ Todavía no hay catálogo de productos cargado${isAdmin() ? '. Impórtalo en la pestaña <b>📋 Catálogo</b>' : '. Avisa al administrador'}. Mientras tanto se apunta el código tal cual.</div>`;
+}
+function renderHome(){
+  renderCatNotice();
+  const zs = L.zones.slice().sort((a, b) => (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1) || b.created - a.created);
+  if (!zs.length){ $('#zoneList').innerHTML = `<div class="empty">Aún no tienes zonas.<br>Escribe arriba el nombre de la zona que vas a contar y pulsa <b>+ Crear</b>.</div>`; return; }
+  $('#zoneList').innerHTML = zs.map(z => {
+    const pend = z.status === 'pending', sent = z.status === 'sent';
+    return `<div class="zcard" data-z="${z.id}"><div class="zi">${sent ? '✅' : pend ? '⏳' : '📦'}</div><div class="grow"><div class="zn">${esc(z.name)}</div>
+      <div class="zs">${z.items.length} productos · ${fmtN(zoneUnits(z))} unidades · ${fmtDT(z.created)}</div></div>
+      ${sent ? `<span class="badge b-ok">Enviada ${fmtT(z.sentAt)}</span>` : pend ? '<span class="badge b-rep">Pendiente de enviar</span>' : '<span class="badge b-blue">En curso</span>'}</div>`;
+  }).join('');
+}
+$('#zoneList').addEventListener('click', e => { const c = e.target.closest('[data-z]'); if (c) openZone(c.dataset.z); });
+$('#newZoneForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = $('#newZoneName').value.trim(); if (!name) { $('#newZoneName').focus(); return; }
+  if (L.zones.some(z => z.status === 'open' && z.name.toLowerCase() === name.toLowerCase()) && !confirm(`Ya tienes una zona «${name}» en curso. ¿Crear otra igual?`)) return;
+  const z = {id:uid(), name, created:now(), status:'open', items:[]};
+  L.zones.push(z); $('#newZoneName').value = ''; $('#newZoneName').blur();
+  changed(); openZone(z.id);
+});
+function openZone(id){ L.active = id; L.undo = []; changed(); showLast('', 'Escanea el primer producto.'); renderZone(); showTab('count'); if (!TOUCH) focusScan(); }
+$('#backBtn').addEventListener('click', () => { L.active = null; changed(); renderHome(); showTab('count'); });
+
+/* ================= Dentro de una zona ================= */
+function renderZone(){
+  const z = curZone(); if (!z) return;
+  const open = z.status === 'open';
+  $('#zTitle').textContent = z.name;
+  $('#zBadge').innerHTML = open ? '' : z.status === 'sent' ? `<span class="badge b-ok">✔ Enviada ${fmtT(z.sentAt)}</span>` : '<span class="badge b-rep">⏳ Pendiente de enviar</span>';
+  $('#zStats').textContent = `${z.items.length} productos · ${fmtN(zoneUnits(z))} unidades` + (open ? '' : ' · ya no se puede modificar');
+  $('#zOpen').hidden = !open; $('#undoBtn').hidden = !open; $('#findBtn').hidden = !open;
+  $('#zDelete').textContent = open ? 'Eliminar esta zona' : 'Quitar de mi lista';
+  $('#zDelete').hidden = z.status === 'pending';
+  $('#finishBar').hidden = !(TAB === 'count' && open);
+  updateHint(); renderItems();
+}
+function renderItems(flash){
+  const z = curZone(); if (!z) return;
+  const q = fold($('#search').value.trim()), open = z.status === 'open';
+  const rows = z.items.filter(r => !q || fold(r.c).includes(q) || fold(descOf(r.c)).includes(q));
+  $('#items').innerHTML = rows.map(r => {
+    const unk = isUnknown(r.c);
+    return `<div class="it" data-c="${esc(r.c)}"><div class="c">${esc(r.c)} ${r.m ? '<span class="badge b-m">a mano</span>' : ''}${unk ? ' <span class="badge b-bad">no está en catálogo</span>' : ''}</div>
+      <div class="q" ${open ? 'data-a="edit" title="Toca para corregir"' : ''}>${fmtN(r.q)}</div>
+      <div class="d">${esc(descOf(r.c)) || '<span class="muted small">' + (r.n > 1 ? r.n + ' lecturas' : '') + '</span>'}</div>
+      ${open ? `<div class="a"><button data-a="dec">−1</button><button data-a="inc">+1</button><button data-a="edit">✎ Cantidad</button><button data-a="del">🗑</button></div>` : ''}</div>`;
+  }).join('') || `<div class="empty">${q ? 'Nada coincide con la búsqueda.' : open ? 'Todavía no hay productos. ¡Empieza a escanear!' : 'Zona vacía.'}</div>`;
+  if (flash){ const el = $('#items').querySelector(`[data-c="${CSS.escape(flash)}"]`); if (el){ el.classList.add('flash'); if (!camOpen()) el.scrollIntoView({block:'nearest'}); } }
+}
+$('#search').addEventListener('input', () => renderItems());
+
+function showLast(cls, html){ for (const el of [$('#last'), $('#camLast')]){ el.className = 'last ' + cls; el.innerHTML = html; } }
+function fail(msg){ showLast('err', esc(msg)); beep('err'); }
+function pushUndo(op){ L.undo.push(op); if (L.undo.length > 300) L.undo.shift(); }
+
+function addScan(raw, qty, manual){
+  const z = curZone();
+  if (!z || z.status !== 'open'){ fail('Abre una zona en curso para escanear.'); return false; }
+  raw = String(raw).trim(); if (!raw) return false;
+  if (!isFinite(qty) || qty === 0){ fail('La cantidad no es válida.'); return false; }
+  const r = resolve(raw);
+  if (r.status === 'unknown'){ openUnknown(raw, qty); return false; }
+  const code = r.code;
+  const i = z.items.findIndex(it => it.c === code), rep = i >= 0;
+  let it;
+  if (rep){ it = z.items.splice(i, 1)[0]; it.q = round(it.q + qty); it.n++; it.t = now(); }
+  else it = {c:code, q:qty, t:now(), n:1};
+  if (manual) it.m = true;
+  z.items.unshift(it);
+  pushUndo({k:'add', c:code, q:qty, created:!rep, pi:rep ? i : 0});
+  changed(); renderItems(code); $('#zStats').textContent = `${z.items.length} productos · ${fmtN(zoneUnits(z))} unidades`;
+  const add = (qty > 0 ? '+' : '') + fmtN(qty), d = descOf(code);
+  const extra = (d ? `<div class="desc">${esc(d)}</div>` : '') + (r.status === 'map' ? `<div class="via">🔁 Código de proveedor ${esc(raw)} → nuestro código <b>${esc(code)}</b></div>` : '');
+  if (rep) showLast('rep', `<span class="big">YA ESTABA ✔ SUMADO</span><br><b class="mono">${esc(code)}</b> → total <b class="big">${fmtN(it.q)}</b> (${add})${extra}`);
+  else showLast('new', `<span class="big">NUEVO ✔</span><br><b class="mono">${esc(code)}</b> → <b class="big">${fmtN(it.q)}</b>${extra}`);
+  beep(rep ? 'rep' : 'new');
+  return true;
+}
+function setQty(code, q, label){
+  const z = curZone(); if (!z || z.status !== 'open') return;
+  const it = z.items.find(x => x.c === code); if (!it || !isFinite(q)) return;
+  pushUndo({k:'set', c:code, prev:it.q, prevM:!!it.m});
+  it.q = round(q); it.m = true; changed(); renderZone();
+  showLast('new', `${label}: <b class="mono">${esc(code)}</b> → <b class="big">${fmtN(it.q)}</b>`);
+}
+function delItem(code){
+  const z = curZone(); if (!z) return;
+  const idx = z.items.findIndex(x => x.c === code); if (idx < 0) return;
+  if (!confirm(`¿Quitar ${code} (cantidad ${fmtN(z.items[idx].q)})?`)) return;
+  const it = z.items.splice(idx, 1)[0]; pushUndo({k:'del', item:it, idx}); changed(); renderZone();
+  showLast('', `Quitado <b class="mono">${esc(code)}</b>. Puedes deshacerlo con ↶.`);
+}
+function undo(){
+  const z = curZone(); if (!z || z.status !== 'open') return;
+  const op = L.undo.pop(); if (!op){ toast('No hay nada que deshacer'); return; }
+  let msg = 'Deshecho';
+  if (op.k === 'add'){
+    const i = z.items.findIndex(x => x.c === op.c);
+    if (i >= 0){ const it = z.items[i];
+      if (op.created && it.n <= 1){ z.items.splice(i, 1); msg = `Deshecho: quitado <b class="mono">${esc(op.c)}</b>`; }
+      else { it.q = round(it.q - op.q); it.n = Math.max(1, it.n - 1); z.items.splice(i, 1); z.items.splice(Math.min(op.pi, z.items.length), 0, it); msg = `Deshecho: <b class="mono">${esc(op.c)}</b> vuelve a <b class="big">${fmtN(it.q)}</b>`; } }
+  } else if (op.k === 'set'){ const it = z.items.find(x => x.c === op.c); if (it){ it.q = op.prev; it.m = op.prevM; msg = `Deshecho: <b class="mono">${esc(op.c)}</b> vuelve a <b class="big">${fmtN(it.q)}</b>`; } }
+  else if (op.k === 'del'){ z.items.splice(Math.min(op.idx, z.items.length), 0, op.item); msg = `Deshecho: recuperado <b class="mono">${esc(op.item.c)}</b>`; }
+  changed(); renderZone(); showLast('rep', msg); beep('new');
+}
+$('#undoBtn').addEventListener('click', undo);
+$('#items').addEventListener('click', e => {
+  const b = e.target.closest('[data-a]'); if (!b) return;
+  const row = b.closest('[data-c]'), code = row && row.dataset.c, z = curZone(); if (!code || !z) return;
+  const it = z.items.find(x => x.c === code); if (!it) return;
+  const a = b.dataset.a;
+  if (a === 'inc') setQty(code, it.q + 1, 'Sumado 1');
+  else if (a === 'dec') setQty(code, it.q - 1, 'Restado 1');
+  else if (a === 'del') delItem(code);
+  else if (a === 'edit'){
+    const qd = row.querySelector('.q'); if (qd.querySelector('input')) return;
+    qd.innerHTML = `<input value="${esc(String(it.q))}" inputmode="decimal">`;
+    const inp = qd.querySelector('input'); inp.focus(); inp.select();
+    let done = false;
+    const fin = ok => { if (done) return; done = true; const v = parseQty(inp.value); if (ok && isFinite(v) && v !== it.q) setQty(code, v, 'Corregido'); else renderItems(); };
+    inp.addEventListener('keydown', ev => { if (ev.key === 'Enter'){ ev.preventDefault(); fin(true); } else if (ev.key === 'Escape') fin(false); });
+    inp.addEventListener('blur', () => fin(true));
+  }
+});
+$('#zDelete').addEventListener('click', () => {
+  const z = curZone(); if (!z) return;
+  if (z.status === 'open' && z.items.length && !confirm(`¿Eliminar la zona «${z.name}» con ${z.items.length} productos? Esto no se puede deshacer.`)) return;
+  if (z.status === 'sent' && !confirm(`¿Quitar «${z.name}» de tu lista? (El administrador ya la tiene recibida.)`)) return;
+  L.zones = L.zones.filter(x => x !== z); L.active = null; changed(); renderHome(); showTab('count');
+});
+
+// Casilla de código (teclado o pistola lectora)
+const scan = $('#scan');
+function focusScan(){ if (!TOUCH && curZone() && !document.querySelector('dialog[open]') && !camOpen()) scan.focus(); }
+function updateHint(){
+  const ok = document.activeElement === scan;
+  $('#scanBox').classList.toggle('ready', ok);
+  $('#scanHint').textContent = ok ? '● Lista para escanear con pistola o escribir y pulsar Intro' : (TOUCH ? 'Toca la casilla si vas a escribir un código o usas una pistola Bluetooth.' : 'Haz clic en la casilla antes de usar la pistola lectora.');
+}
+scan.addEventListener('focus', updateHint); scan.addEventListener('blur', () => setTimeout(updateHint, 50));
+function submitScan(){
+  const v = scan.value.trim(); scan.value = '';
+  if (!v) return;
+  const m = v.match(/^[*xX]\s*(-?\d+(?:[.,]\d+)?)$/);
+  if (m){ $('#qty').value = m[1]; showLast('', `El próximo producto contará <b class="big">${esc(m[1])}</b> unidades`); return; }
+  const q = parseQty($('#qty').value);
+  if (!isFinite(q) || q === 0){ fail('La cantidad no es válida.'); return; }
+  if (addScan(v, q, false)) $('#qty').value = '1';
+}
+scan.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'Tab'){ e.preventDefault(); submitScan(); } });
+$('#addBtn').addEventListener('click', () => { submitScan(); if (!TOUCH) scan.focus(); });
+$('#qty').addEventListener('focus', e => e.target.select());
+$('#qty').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); scan.focus(); } });
+document.addEventListener('keydown', e => {
+  const ae = document.activeElement;
+  const inText = ae && ((ae.tagName === 'INPUT' && !['checkbox','file'].includes(ae.type)) || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT');
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's'){ e.preventDefault(); if (saveNow()) toast('💾 Guardado'); return; }
+  if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && (!inText || (ae === scan && !scan.value)) && TAB === 'count'){ e.preventDefault(); undo(); return; }
+  // Una pistola lectora escribe como un teclado: si no hay ninguna casilla activa, lo mandamos a la del código
+  if (!inText && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey && TAB === 'count' && curZone() && curZone().status === 'open' && !document.querySelector('dialog[open]') && !camOpen()) scan.focus();
+});
+document.addEventListener('click', () => setTimeout(() => { const ae = document.activeElement; if (!TOUCH && TAB === 'count' && (!ae || ae === document.body || ae.tagName === 'BUTTON')) focusScan(); }, 0));
+
+/* ================= Código desconocido ================= */
+let UNK = null;
+function openUnknown(raw, qty){
+  UNK = {raw, qty};
+  $('#unkCode').textContent = raw; $('#unkInput').value = ''; $('#unkErr').textContent = ''; $('#unkPreview').textContent = '';
+  showLast('err', `<span class="big">⚠ NO ENCONTRADO</span><br><b class="mono">${esc(raw)}</b> no está en el catálogo. No se ha sumado.`);
+  beep('err');
+  $('#unkDlg').showModal();
+  if (!TOUCH) $('#unkInput').focus();
+}
+$('#unkInput').addEventListener('input', () => {
+  const v = $('#unkInput').value.trim(); if (!v){ $('#unkPreview').textContent = ''; return; }
+  const r = resolve(v);
+  $('#unkPreview').innerHTML = r.status === 'unknown' ? '' : `✔ <b class="mono">${esc(r.code)}</b> · ${esc(descOf(r.code))}`;
+  $('#unkErr').textContent = '';
+});
+$('#unkForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const v = $('#unkInput').value.trim();
+  if (!v){ $('#unkErr').textContent = 'Escribe nuestro código del producto.'; return; }
+  const r = resolve(v);
+  if (r.status === 'unknown'){ $('#unkErr').textContent = 'Ese código tampoco está en el catálogo. Revísalo o usa 📖 Buscar producto.'; return; }
+  assignAndAdd(r.code);
+});
+function assignAndAdd(erp){
+  if (!UNK) return;
+  const {raw, qty} = UNK; UNK = null;
+  const key = norm(raw);
+  const p = {barcode:key, raw_barcode:raw, erp, created_by:ME.id, created_by_name:ME.display_name};
+  EXTRA[key] = erp; MAPS.unshift(Object.assign({created_at:new Date().toISOString()}, p));
+  L.outbox.push({t:'map', p}); changed(); flushOutbox();
+  $('#unkDlg').close();
+  if (addScan(raw, qty, false)) { $('#qty').value = '1'; toast(`🔗 Guardado: ${raw} → ${erp}. Ya lo reconocerá en todos los dispositivos.`, 4000); }
+}
+$('#unkCancel').addEventListener('click', () => { UNK = null; $('#unkDlg').close(); showLast('err', 'Código no encontrado: <b>no se ha sumado</b>.'); });
+$('#unkFind').addEventListener('click', () => openFind(true));
+
+/* ================= Buscar producto en el catálogo ================= */
+let FIND_FOR_UNK = false;
+function openFind(forUnk){
+  if (!CAT){ toast('No hay catálogo cargado todavía'); return; }
+  FIND_FOR_UNK = !!forUnk;
+  $('#findInput').value = ''; $('#findRes').innerHTML = '<p class="muted small">Escribe parte del nombre o del código.</p>';
+  $('#findQty').parentElement.hidden = FIND_FOR_UNK;
+  $('#findDlg').showModal(); setTimeout(() => $('#findInput').focus(), 50);
+}
+$('#findBtn').addEventListener('click', () => openFind(false));
+$('#findClose').addEventListener('click', () => $('#findDlg').close());
+$('#findInput').addEventListener('input', () => {
+  const q = fold($('#findInput').value.trim()); if (q.length < 2){ $('#findRes').innerHTML = ''; return; }
+  const words = q.split(/\s+/), out = [];
+  for (const [erp, d, bcs] of CAT.rows){
+    const hay = fold(erp + ' ' + d + ' ' + (bcs || []).join(' '));
+    if (words.every(w => hay.includes(w))){ out.push([erp, d]); if (out.length >= 40) break; }
+  }
+  $('#findRes').innerHTML = out.map(([erp, d]) => `<div class="res" data-erp="${esc(erp)}"><div><div class="c">${esc(erp)}</div><div class="small">${esc(d)}</div></div><span class="badge b-blue">${FIND_FOR_UNK ? 'Es este' : '+ Añadir'}</span></div>`).join('') || '<p class="muted">Ningún producto coincide.</p>';
+});
+$('#findRes').addEventListener('click', e => {
+  const r = e.target.closest('[data-erp]'); if (!r) return;
+  const erp = r.dataset.erp; $('#findDlg').close();
+  if (FIND_FOR_UNK){ assignAndAdd(erp); return; }
+  const q = parseQty($('#findQty').value);
+  addScan(erp, isFinite(q) && q ? q : 1, true);
+});
+
+/* ================= Terminar y enviar ================= */
+$('#finishBtn').addEventListener('click', () => {
+  const z = curZone(); if (!z || z.status !== 'open') return;
+  if (!z.items.length){ toast('La zona está vacía: escanea algún producto antes de enviarla'); return; }
+  const unk = z.items.filter(it => isUnknown(it.c)).length;
+  if (!confirm(`¿Terminar y enviar «${z.name}»?\n\n${z.items.length} productos · ${fmtN(zoneUnits(z))} unidades${unk ? `\n⚠ ${unk} con código que no está en el catálogo` : ''}\n\nDespués ya no se podrá modificar.`)) return;
+  const lines = z.items.slice().sort((a, b) => a.c.localeCompare(b.c, 'es', {numeric:true})).map(it => [it.c, it.q]);
+  const p = {client_id:z.id, user_id:ME.id, user_name:ME.display_name, zone:z.name, lines, line_count:lines.length, units:zoneUnits(z), unknown_count:unk};
+  z.status = 'pending'; L.outbox.push({t:'sub', p}); changed();
+  renderZone(); showTab('count'); flushOutbox();
+  toast(navigator.onLine ? 'Enviando…' : '⏳ Sin conexión: se enviará sola cuando vuelva internet', 4000);
+});
+
+/* ================= ADMIN: Excels recibidos ================= */
+let SUBS = [], SEL = new Set();
+async function loadSubs(){
+  try{
+    const {data, error} = await SB.from('inv_submissions').select('id, user_name, zone, lines, line_count, units, unknown_count, created_at, downloaded_at').order('created_at', {ascending:false}).limit(1000);
+    if (error) throw error;
+    SUBS = data; renderSubs();
+  }catch(e){ console.warn('loadSubs', e); }
+}
+function visibleSubs(){
+  const days = +$('#subsRange').value, q = fold($('#subsSearch').value.trim());
+  const from = days ? (() => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (days - 1)); return d.getTime(); })() : 0;
+  return SUBS.filter(s => Date.parse(s.created_at) >= from && (!q || fold(s.zone + ' ' + s.user_name).includes(q)));
+}
+function renderSubs(){
+  const nNew = SUBS.filter(s => !s.downloaded_at).length;
+  $('#subsBadge').hidden = !nNew; $('#subsBadge').textContent = nNew;
+  if (TAB !== 'subs') return;
+  const v = visibleSubs();
+  for (const id of [...SEL]) if (!v.some(s => s.id === id)) SEL.delete(id);
+  $('#subsInfo').textContent = `${v.length} envíos · ${SEL.size} seleccionados` + (SEL.size ? '' : ' (si no seleccionas ninguno, se descargan todos los de la lista)');
+  $('#subsList').innerHTML = v.map(s => `<div class="subcard"><input type="checkbox" data-sel="${s.id}" ${SEL.has(s.id) ? 'checked' : ''}>
+    <div><div class="t">${esc(s.zone)} ${s.downloaded_at ? '' : '<span class="badge b-blue">nuevo</span>'} ${s.unknown_count ? `<span class="badge b-bad">⚠ ${s.unknown_count} sin catálogo</span>` : ''}</div>
+    <div class="m">👤 ${esc(s.user_name)} · ${fmtDT(Date.parse(s.created_at))} · ${s.line_count} productos · ${fmtN(+s.units)} uds</div></div>
+    <div class="a"><button data-view="${s.id}">Ver</button><button data-dl="${s.id}" class="primary">⬇ Excel</button></div></div>`).join('') || '<div class="empty">No hay envíos en este periodo.</div>';
+}
+$('#subsRange').addEventListener('change', renderSubs);
+$('#subsSearch').addEventListener('input', renderSubs);
+$('#subsList').addEventListener('change', e => { const c = e.target.closest('[data-sel]'); if (!c) return; c.checked ? SEL.add(c.dataset.sel) : SEL.delete(c.dataset.sel); renderSubs(); });
+$('#subsList').addEventListener('click', e => {
+  const d = e.target.closest('[data-dl]'), v = e.target.closest('[data-view]');
+  if (d){ const s = SUBS.find(x => x.id === d.dataset.dl); if (s) dlSubs([s], 'one'); }
+  if (v){ const s = SUBS.find(x => x.id === v.dataset.view); if (s) viewSub(s); }
+});
+$('#selAll').addEventListener('click', () => { const v = visibleSubs(); if (SEL.size === v.length) SEL.clear(); else v.forEach(s => SEL.add(s.id)); renderSubs(); });
+const pickSubs = () => { const v = visibleSubs(); return SEL.size ? v.filter(s => SEL.has(s.id)) : v; };
+$('#dlSheets').addEventListener('click', () => dlSubs(pickSubs(), 'sheets'));
+$('#dlZip').addEventListener('click', () => dlSubs(pickSubs(), 'zip'));
+$('#dlCons').addEventListener('click', () => dlSubs(pickSubs(), 'cons'));
+$('#delSubs').addEventListener('click', async () => {
+  const list = SEL.size ? visibleSubs().filter(s => SEL.has(s.id)) : [];
+  if (!list.length){ toast('Selecciona primero los envíos que quieres eliminar'); return; }
+  if (!confirm(`¿Eliminar ${list.length} envío(s) del servidor? No se puede deshacer.`)) return;
+  const {error} = await SB.from('inv_submissions').delete().in('id', list.map(s => s.id));
+  if (error){ alert('No se han podido eliminar: ' + error.message); return; }
+  SEL.clear(); loadSubs(); toast('Eliminados');
+});
+function viewSub(s){
+  $('#vdTitle').textContent = `${s.zone} · ${s.user_name}`;
+  $('#vdBody').innerHTML = `<p class="muted small" style="margin-top:0">${fmtDT(Date.parse(s.created_at))} · ${s.line_count} productos · ${fmtN(+s.units)} unidades</p>` +
+    `<div class="items">${s.lines.map(([c, q]) => `<div class="it"><div class="c">${esc(c)}${isUnknown(c) ? ' <span class="badge b-bad">no está en catálogo</span>' : ''}</div><div class="q" style="cursor:default">${fmtN(q)}</div><div class="d">${esc(descOf(c))}</div></div>`).join('')}</div>`;
+  $('#viewDlg').showModal();
+}
+async function dlSubs(list, mode){
+  if (!list.length){ toast('No hay envíos en la lista'); return; }
+  const unk = list.reduce((a, s) => a + (s.unknown_count || 0), 0);
+  if (unk && !confirm(`⚠ Hay ${unk} líneas con códigos que no están en el catálogo. Administración puede no aceptarlas.\n\n¿Descargar igualmente?`)) return;
+  const st = stamp(), rowsOf = s => s.lines.filter(([, q]) => !(OPTS.skipZero && +q === 0));
+  if (mode === 'one'){ const s = list[0]; download(buildXlsx([{name:s.zone, rows:rowsOf(s)}]), `Inventario_${safe(s.zone)}_${safe(s.user_name)}_${st}.xlsx`, XLSX_T); }
+  else if (mode === 'sheets') download(buildXlsx(list.map(s => ({name:`${s.zone} - ${s.user_name}`, rows:rowsOf(s)}))), `Inventario_por_zonas_${st}.xlsx`, XLSX_T);
+  else if (mode === 'zip'){
+    const used = new Set();
+    const files = list.map(s => { let n = `Inventario_${safe(s.zone)}_${safe(s.user_name)}.xlsx`, i = 2; while (used.has(n.toLowerCase())) n = `Inventario_${safe(s.zone)}_${safe(s.user_name)}_${i++}.xlsx`; used.add(n.toLowerCase()); return {name:n, data:buildXlsx([{name:s.zone, rows:rowsOf(s)}])}; });
+    download(zipBytes(files), `Inventario_zonas_${st}.zip`, 'application/zip');
+  } else {
+    const agg = new Map();
+    for (const s of list) for (const [c, q] of s.lines) agg.set(c, round((agg.get(c) || 0) + +q));
+    const rows = [...agg.entries()].filter(([, q]) => !(OPTS.skipZero && q === 0)).sort((a, b) => a[0].localeCompare(b[0], 'es', {numeric:true}));
+    download(buildXlsx([{name:'Inventario', rows}]), `Inventario_consolidado_${st}.xlsx`, XLSX_T);
+  }
+  const ids = list.filter(s => !s.downloaded_at).map(s => s.id);
+  if (ids.length){ await SB.from('inv_submissions').update({downloaded_at:new Date().toISOString()}).in('id', ids); loadSubs(); }
+}
+
+/* ================= ADMIN: catálogo ================= */
+function renderCat(){
+  if (!$('#catStatus')) return;
+  $('#catStatus').innerHTML = CAT
+    ? `<div class="kv"><b>Productos</b><span><b style="color:var(--text)">${CAT.rows.length.toLocaleString('es-ES')}</b></span><b>Códigos de proveedor</b><span>${Object.keys(CAT.bc).length.toLocaleString('es-ES')} + ${MAPS.length} asignados a mano</span><b>Archivo</b><span>${esc(CAT.name)}</span><b>Actualizado</b><span>${fmtDT(CAT.loaded)}${CAT.by ? ' por ' + esc(CAT.by) : ''}</span></div>`
+    : '<b>Todavía no hay catálogo.</b> Pulsa «Importar Excel de stock». Mientras no haya catálogo, los empleados pueden escanear cualquier código.';
+  $('#optText').checked = OPTS.codeText; $('#optZero').checked = OPTS.skipZero;
+}
+$('#optText').addEventListener('change', e => { OPTS.codeText = e.target.checked; saveOpts(); });
+$('#optZero').addEventListener('change', e => { OPTS.skipZero = e.target.checked; saveOpts(); });
+$('#testBtn').addEventListener('click', testCode);
+$('#testCode').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); testCode(); } });
+function testCode(){
+  const v = $('#testCode').value.trim(); if (!v) return;
+  const r = resolve(v), el = $('#testRes'); el.hidden = false;
+  if (r.status === 'erp'){ el.className = 'last new'; el.innerHTML = `✔ Es nuestro código <b class="mono">${esc(r.code)}</b><div class="desc">${esc(descOf(r.code))}</div>`; }
+  else if (r.status === 'map'){ el.className = 'last new'; el.innerHTML = `🔁 Código de proveedor → se apuntará como <b class="mono">${esc(r.code)}</b><div class="desc">${esc(descOf(r.code))}</div>`; }
+  else if (r.status === 'nocat'){ el.className = 'last'; el.textContent = 'No hay catálogo cargado.'; }
+  else { el.className = 'last err'; el.innerHTML = `⚠ <b class="mono">${esc(v)}</b> no está en el catálogo: al escanearlo saldrá como error.`; }
+  $('#testCode').select();
 }
 
 // --- Lectura de Excel (.xlsx) y CSV sin librerías ---
@@ -1114,8 +1071,7 @@ async function readZip(buf){
     const start = f.off + 30 + dv.getUint16(f.off + 26, true) + dv.getUint16(f.off + 28, true);
     const data = new Uint8Array(buf, start, f.size);
     if (f.method === 0) return dec.decode(data);
-    const out = await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer();
-    return dec.decode(out);
+    return dec.decode(await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer());
   }};
 }
 const xmlDoc = s => new DOMParser().parseFromString(s, 'application/xml');
@@ -1170,17 +1126,15 @@ function parseCsv(txt){
   if (f || row.length){ row.push(f.trim()); rows.push(row); }
   return rows.filter(r => r.some(x => x !== ''));
 }
-
-// --- Cargar archivo y elegir columnas ---
 $('#catLoadBtn').addEventListener('click', () => $('#catFile').click());
 $('#catFile').addEventListener('change', async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   try{
     const buf = await f.arrayBuffer(), sig = new Uint8Array(buf.slice(0, 4));
     let sheets;
-    if (sig[0] === 0xD0 && sig[1] === 0xCF) throw new Error('Es un Excel antiguo (.xls). Ábrelo en Excel y guárdalo como "Libro de Excel (.xlsx)" o como CSV.');
+    if (sig[0] === 0xD0 && sig[1] === 0xCF) throw new Error('Es un Excel antiguo (.xls). Ábrelo en Excel y guárdalo como «Libro de Excel (.xlsx)» o como CSV.');
     if (sig[0] === 0x50 && sig[1] === 0x4B){
-      if (!('DecompressionStream' in window)) throw new Error('Este navegador no puede leer Excel. Actualiza Chrome/Edge o guarda el archivo como CSV.');
+      if (!('DecompressionStream' in window)) throw new Error('Este navegador no puede leer Excel. Actualiza Chrome/Edge/Safari o guarda el archivo como CSV.');
       sheets = await readXlsx(buf);
     } else {
       let txt; try{ txt = new TextDecoder('utf-8', {fatal:true}).decode(buf); }catch(_){ txt = new TextDecoder('windows-1252').decode(buf); }
@@ -1203,8 +1157,7 @@ async function openMapDialog(name, sheets){
 $('#mapSheet').addEventListener('change', e => loadMapSheet(+e.target.value));
 async function loadMapSheet(i){
   const rows = await MAP.sheets[i].load(); MAP.rows = rows;
-  const nc = Math.max(1, ...rows.slice(0, 300).map(r => r.length));
-  const head = rows[0] || [];
+  const nc = Math.max(1, ...rows.slice(0, 300).map(r => r.length)), head = rows[0] || [];
   const opts = Array.from({length:nc}, (_, c) => `<option value="${c}">Columna ${colL(c)}${head[c] ? ' · ' + esc(head[c].slice(0, 25)) : ''}</option>`).join('');
   $('#mapErp').innerHTML = opts; $('#mapErp').value = '0';
   $('#mapDesc').innerHTML = '<option value="-1">— ninguna —</option>' + opts;
@@ -1217,13 +1170,13 @@ async function loadMapSheet(i){
   $('#mapDesc').value = dc != null ? String(dc) : '-1';
   $('#mapHeader').checked = head.some(x => /c[oó]d|ref|art[ií]c|descrip|ean|barra|nombre|prove/i.test(x));
   $('#mapPreview').innerHTML = `<tr><th></th>${Array.from({length:nc}, (_, c) => `<th>${colL(c)}</th>`).join('')}</tr>` +
-    rows.slice(0, 8).map((r, ri) => `<tr><td class="sm">${ri + 1}</td>${Array.from({length:nc}, (_, c) => `<td>${esc(r[c] || '')}</td>`).join('')}</tr>`).join('');
-  $('#mapInfo').textContent = `${rows.length.toLocaleString('es-ES')} filas en esta hoja. Si un producto tiene varios códigos de proveedor, pueden estar en varias filas, en varias columnas o separados por comas en la misma celda.`;
+    rows.slice(0, 8).map((r, ri) => `<tr><td class="muted">${ri + 1}</td>${Array.from({length:nc}, (_, c) => `<td>${esc(r[c] || '')}</td>`).join('')}</tr>`).join('');
+  $('#mapInfo').textContent = `${rows.length.toLocaleString('es-ES')} filas. Si un producto tiene varios códigos de proveedor, pueden estar en varias filas, en varias columnas o separados por comas.`;
 }
 $('#mapGo').addEventListener('click', async () => {
   const ec = +$('#mapErp').value, dc = +$('#mapDesc').value;
   const bcs = [...$('#mapBc').querySelectorAll('input:checked')].map(x => +x.value).filter(c => c !== ec);
-  if (!bcs.length && !confirm('No has marcado ninguna columna de código de barras de proveedor. El catálogo solo servirá para ver descripciones y detectar códigos desconocidos. ¿Continuar?')) return;
+  if (!bcs.length && !confirm('No has marcado ninguna columna de código de barras de proveedor. Solo se reconocerán nuestros códigos. ¿Continuar?')) return;
   const src = $('#mapHeader').checked ? MAP.rows.slice(1) : MAP.rows;
   const byErp = new Map();
   for (const r of src){
@@ -1234,74 +1187,190 @@ $('#mapGo').addEventListener('click', async () => {
     for (const c of bcs) for (const b of String(r[c] || '').split(/[,;|\s]+/)) if (b && b !== erp && !e[2].includes(b)) e[2].push(b);
   }
   if (!byErp.size){ alert('No hay ningún código ERP en la columna elegida.'); return; }
-  CAT = buildCatIndex({name:MAP.name, loaded:now(), rows:[...byErp.values()], extra: CAT ? CAT.extra : {}});
-  let conf = 0; const seen = new Map();
-  for (const [erp, , b] of CAT.rows) for (const x of b){ const k = norm(x); if (seen.has(k) && seen.get(k) !== erp) conf++; else seen.set(k, erp); }
-  await saveCat();
+  const rows = [...byErp.values()];
+  $('#mapGo').disabled = true; $('#mapGo').textContent = 'Enviando a todos…';
+  const {error} = await SB.from('inv_catalog').update({data:rows, file_name:MAP.name, row_count:rows.length, updated_by:ME.id, updated_by_name:ME.display_name}).eq('id', 1);
+  $('#mapGo').disabled = false; $('#mapGo').textContent = 'Importar y enviar a todos';
+  if (error){ alert('No se ha podido subir el catálogo: ' + error.message); return; }
   $('#mapDlg').close();
-  renderCatBox(); render();
-  alert(`Catálogo cargado: ${CAT.rows.length.toLocaleString('es-ES')} productos y ${Object.keys(CAT.bc).length.toLocaleString('es-ES')} códigos de proveedor.` +
-    (conf ? `\n\n⚠ ${conf} códigos de barras están en más de un producto; se usará el que aparece primero en el Excel.` : ''));
-  maybeApply();
+  await syncCatalog(true);
+  alert(`✔ Catálogo importado: ${rows.length.toLocaleString('es-ES')} productos.\n\nYa está disponible en todos los dispositivos.`);
 });
 
-// --- Convertir lo ya escaneado y asignar códigos desconocidos ---
-function mergeCode(z, from, to){
-  const i = z.items.findIndex(x => x.c === from); if (i < 0) return;
-  const it = z.items[i], j = z.items.findIndex(x => x.c === to);
-  if (j >= 0){ const t = z.items[j]; t.q = round(t.q + it.q); t.n += it.n; t.t = Math.max(t.t, it.t); if (it.m) t.m = true; z.items.splice(i, 1); }
-  else it.c = to;
+/* ================= ADMIN: usuarios ================= */
+let USERS = [];
+async function loadUsers(){
+  $('#userList').innerHTML = '<p class="muted">Cargando…</p>';
+  try{ USERS = (await fnCall({action:'list'})).users; renderUsers(); }
+  catch(e){ $('#userList').innerHTML = `<div class="notice bad">${esc(e.message)}</div>`; }
 }
-function convertible(){
-  const list = [];
-  for (const z of S.zones) for (const it of z.items){ const r = resolve(it.c); if (r.code !== it.c && r.status !== 'unknown') list.push([z, it.c, r.code]); }
-  return list;
+function renderUsers(){
+  $('#userList').innerHTML = USERS.map(u => `<div class="urow" data-u="${u.id}"><div class="grow"><b>${esc(u.display_name)}</b> ${u.role === 'admin' ? '<span class="badge b-blue">Admin</span>' : '<span class="badge">Empleado</span>'} ${u.active ? '' : '<span class="badge b-bad">Desactivado</span>'}
+    <div class="small muted">Usuario: <b class="mono">${esc(u.username)}</b> · ${u.last_sign_in_at ? 'última entrada ' + fmtDT(Date.parse(u.last_sign_in_at)) : 'nunca ha entrado'}</div></div>
+    ${u.id === ME.id ? '<span class="small muted">(tú)</span><button data-ua="pin">Cambiar PIN</button>' : `<button data-ua="pin">Cambiar PIN</button><button data-ua="role">${u.role === 'admin' ? 'Hacer empleado' : 'Hacer admin'}</button><button data-ua="active">${u.active ? 'Desactivar' : 'Activar'}</button><button data-ua="del" class="danger">Eliminar</button>`}</div>`).join('') || '<p class="muted">No hay usuarios.</p>';
 }
-function applyCatalog(list){ for (const [z, from, to] of list) mergeCode(z, from, to); changed(); render(); toast(`${list.length} líneas convertidas a código ERP`); }
-function maybeApply(){
-  const list = convertible(); if (!list.length) return;
-  if (confirm(`Hay ${list.length} líneas ya escaneadas con códigos de proveedor que se pueden pasar a su código ERP.\n\n¿Convertirlas ahora? (si ese producto ya estaba apuntado con su código ERP, las cantidades se suman)`)) applyCatalog(list);
-}
-$('#catApplyBtn').addEventListener('click', () => { if (!convertible().length) toast('No hay líneas que convertir'); else maybeApply(); });
-$('#catClearBtn').addEventListener('click', async () => {
-  if (!confirm('¿Quitar el catálogo de este ordenador? A partir de ahora se apuntará el código tal cual lo lea la pistola. (Lo ya escaneado no cambia.)')) return;
-  CAT = null; await saveCat(); renderCatBox(); render();
+const genPin = () => String(Math.floor(100000 + Math.random() * 900000));
+$('#genPin').addEventListener('click', () => { $('#nuPin').value = genPin(); });
+$('#newUserForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const name = $('#nuName').value.trim(), username = normUser($('#nuUser').value), pin = $('#nuPin').value.trim(), role = $('#nuRole').value;
+  if (!name || username.length < 2){ $('#nuErr').textContent = 'Escribe el nombre y el usuario.'; return; }
+  if (!/^\d{6}$/.test(pin)){ $('#nuErr').textContent = 'El PIN debe tener 6 números.'; return; }
+  $('#nuErr').textContent = '';
+  try{
+    await fnCall({action:'create', name, username, pin, role});
+    alert(`✔ Usuario creado.\n\nNombre: ${name}\nUsuario: ${username}\nPIN: ${pin}\n\nDáselo a la persona. Entrará en https://aquitaniamobles.github.io/inventario/ y se quedará conectada en su móvil.`);
+    $('#newUserForm').reset(); loadUsers();
+  }catch(err){ $('#nuErr').textContent = err.message; }
 });
-function linkUnknown(code){
-  const z = activeZone(); if (!guard(z) || !CAT) return;
-  let erp = prompt(`El código ${code} no está en el catálogo.\n\nEscribe o escanea el código ERP correcto de este producto (también vale otro código de barras del mismo producto que sí esté en el catálogo).\n\nA partir de ahora, cada vez que se escanee ${code} se apuntará con ese código ERP:`);
-  if (!erp || !erp.trim()) return;
-  erp = erp.trim();
-  const r = resolve(erp), target = r.status === 'unknown' ? erp : r.code;
-  if (r.status === 'unknown' && !confirm(`El código ${erp} tampoco está en el catálogo. ¿Usarlo igualmente?`)) return;
-  if (norm(target) === norm(code)) return;
-  CAT.extra[norm(code)] = target; saveCat();
-  for (const zz of S.zones) mergeCode(zz, code, target);
-  changed(); render(); renderCatBox();
-  const d = descOf(target);
-  showLast('new', `🔗 <b>${esc(code)}</b> asignado al código ERP <b class="big">${esc(target)}</b>${d ? `<div class="desc">${esc(d)}</div>` : ''}<div class="via">Los próximos escaneos de ${esc(code)} se apuntarán directamente como ${esc(target)}.</div>`);
-  beep('new');
+$('#userList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-ua]'); if (!b) return;
+  const u = USERS.find(x => x.id === b.closest('[data-u]').dataset.u); if (!u) return;
+  try{
+    if (b.dataset.ua === 'pin'){
+      const pin = prompt(`Nuevo PIN de 6 números para ${u.display_name}:`, genPin()); if (!pin) return;
+      if (!/^\d{6}$/.test(pin.trim())){ alert('El PIN debe tener 6 números.'); return; }
+      await fnCall({action:'reset_pin', id:u.id, pin:pin.trim()}); alert(`PIN cambiado. Nuevo PIN de ${u.display_name}: ${pin.trim()}`);
+    } else if (b.dataset.ua === 'role'){
+      if (!confirm(`¿Hacer ${u.role === 'admin' ? 'empleado' : 'administrador'} a ${u.display_name}?`)) return;
+      await fnCall({action:'set_role', id:u.id, role:u.role === 'admin' ? 'empleado' : 'admin'});
+    } else if (b.dataset.ua === 'active'){
+      if (u.active && !confirm(`¿Desactivar a ${u.display_name}? No podrá entrar hasta que lo actives.`)) return;
+      await fnCall({action:'set_active', id:u.id, active:!u.active});
+    } else if (b.dataset.ua === 'del'){
+      if (!confirm(`¿Eliminar a ${u.display_name}? Sus envíos recibidos se conservan.`)) return;
+      await fnCall({action:'delete', id:u.id});
+    }
+    loadUsers();
+  }catch(err){ alert(err.message); }
+});
+
+/* ================= ADMIN: códigos asignados ================= */
+function renderMaps(){
+  if (TAB !== 'maps') return;
+  const q = fold($('#mapsSearch').value.trim());
+  const list = MAPS.filter(m => !q || fold(m.raw_barcode + ' ' + m.erp + ' ' + descOf(m.erp) + ' ' + m.created_by_name).includes(q));
+  $('#mapsList').innerHTML = list.map(m => `<div class="urow"><div class="grow"><b class="mono">${esc(m.raw_barcode)}</b> → <b class="mono">${esc(m.erp)}</b> <span class="small">${esc(descOf(m.erp))}</span>
+    <div class="small muted">Asignado por ${esc(m.created_by_name || '¿?')} · ${m.created_at ? fmtDT(Date.parse(m.created_at)) : ''}</div></div><button class="danger" data-delmap="${esc(m.barcode)}">Borrar</button></div>`).join('') || '<div class="empty">Nadie ha asignado códigos todavía.</div>';
+}
+$('#mapsSearch').addEventListener('input', renderMaps);
+$('#mapsList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-delmap]'); if (!b) return;
+  if (!confirm('¿Borrar esta asignación? Ese código volverá a salir como «no encontrado».')) return;
+  const {error} = await SB.from('inv_barcode_map').delete().eq('barcode', b.dataset.delmap);
+  if (error){ alert(error.message); return; }
+  syncMaps();
+});
+
+/* ================= Menú de usuario ================= */
+$('#userBtn').addEventListener('click', () => {
+  $('#udName').textContent = ME.display_name;
+  $('#udInfo').innerHTML = `<b>Usuario</b><span class="mono">${esc(ME.username)}</span><b>Tipo</b><span>${isAdmin() ? 'Administrador' : 'Empleado'}</span><b>Catálogo</b><span>${CAT ? CAT.rows.length.toLocaleString('es-ES') + ' productos · ' + fmtDT(CAT.loaded) : 'sin catálogo'}</span><b>Pendientes</b><span>${L.outbox.length || 'ninguno'}</span>`;
+  $('#optSound').checked = OPTS.sound;
+  $('#userDlg').showModal();
+});
+$('#optSound').addEventListener('change', e => { OPTS.sound = e.target.checked; saveOpts(); });
+$('#helpBtn').addEventListener('click', () => { $('#userDlg').close(); $('#helpDlg').showModal(); });
+document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => { if (e.target.closest('[data-close]') || e.target === d) d.close(); }));
+$('#unkDlg').addEventListener('close', () => { UNK = null; });
+
+/* ================= Sonido ================= */
+let actx = null;
+function beep(kind){
+  try{ navigator.vibrate && navigator.vibrate(kind === 'new' ? 70 : kind === 'rep' ? [50, 70, 50] : [250, 80, 250]); }catch(e){}
+  if (!OPTS.sound) return;
+  try{
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const seq = kind === 'new' ? [[1300, .09]] : kind === 'rep' ? [[880, .07], [0, .05], [880, .07]] : [[180, .35]];
+    let t = actx.currentTime;
+    for (const [f, d] of seq){
+      if (f){ const o = actx.createOscillator(), g = actx.createGain(); o.type = kind === 'err' ? 'square' : 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(.18, t); g.gain.exponentialRampToValueAtTime(.001, t + d); o.connect(g).connect(actx.destination); o.start(t); o.stop(t + d); }
+      t += d;
+    }
+  }catch(e){}
 }
 
-/* ================= Escáner con cámara (móvil, tablet o webcam) ================= */
+/* ================= Generador de Excel (.xlsx) ================= */
+const enc = new TextEncoder();
+const CRC_T = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++){ let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b){ let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_T[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function zipBytes(files){
+  const d = new Date(), dosTime = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1), dosDate = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  const parts = [], central = []; let offset = 0;
+  for (const f of files){
+    const name = enc.encode(f.name), data = typeof f.data === 'string' ? enc.encode(f.data) : f.data, crc = crc32(data);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true); lh.setUint16(10, dosTime, true); lh.setUint16(12, dosDate, true);
+    lh.setUint32(14, crc, true); lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, name.length, true); lh.setUint16(28, 0, true);
+    parts.push(new Uint8Array(lh.buffer), name, data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true); ch.setUint16(12, dosTime, true); ch.setUint16(14, dosDate, true);
+    ch.setUint32(16, crc, true); ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, name.length, true);
+    ch.setUint16(30, 0, true); ch.setUint16(32, 0, true); ch.setUint16(34, 0, true); ch.setUint16(36, 0, true); ch.setUint32(38, 0, true); ch.setUint32(42, offset, true);
+    central.push(new Uint8Array(ch.buffer), name);
+    offset += 30 + name.length + data.length;
+  }
+  const cdSize = central.reduce((a, b) => a + b.length, 0), eo = new DataView(new ArrayBuffer(22));
+  eo.setUint32(0, 0x06054b50, true); eo.setUint16(4, 0, true); eo.setUint16(6, 0, true); eo.setUint16(8, files.length, true); eo.setUint16(10, files.length, true); eo.setUint32(12, cdSize, true); eo.setUint32(16, offset, true); eo.setUint16(20, 0, true);
+  const all = [...parts, ...central, new Uint8Array(eo.buffer)], out = new Uint8Array(all.reduce((a, b) => a + b.length, 0)); let p = 0;
+  for (const a of all){ out.set(a, p); p += a.length; }
+  return out;
+}
+const xe = s => String(s).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function sheetNames(names){
+  const used = new Set();
+  return names.map(n => {
+    let b = String(n).replace(/[\[\]:*?\/\\]/g, '-').replace(/^'+|'+$/g, '').trim().slice(0, 31) || 'Zona', s = b, i = 2;
+    while (used.has(s.toLowerCase())){ const suf = ` (${i++})`; s = b.slice(0, 31 - suf.length) + suf; }
+    used.add(s.toLowerCase()); return s;
+  });
+}
+function sheetXml(rows){
+  let x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols><col min="1" max="1" width="22" customWidth="1"/><col min="2" max="2" width="12" customWidth="1"/></cols><sheetData>';
+  rows.forEach((r, i) => {
+    const n = i + 1, c = String(r[0]), asNum = !OPTS.codeText && /^[1-9]\d{0,14}$/.test(c);
+    x += `<row r="${n}">${asNum ? `<c r="A${n}"><v>${c}</v></c>` : `<c r="A${n}" t="inlineStr"><is><t>${xe(c)}</t></is></c>`}<c r="B${n}"><v>${Number(r[1])}</v></c></row>`;
+  });
+  return x + '</sheetData></worksheet>';
+}
+function buildXlsx(sheets){
+  const H = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n', names = sheetNames(sheets.map(s => s.name));
+  return zipBytes([
+    {name:'[Content_Types].xml', data: H + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' + sheets.map((s, i) => `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join('') + '</Types>'},
+    {name:'_rels/.rels', data: H + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
+    {name:'xl/workbook.xml', data: H + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' + names.map((n, i) => `<sheet name="${xe(n)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('') + '</sheets></workbook>'},
+    {name:'xl/_rels/workbook.xml.rels', data: H + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + sheets.map((s, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('') + `<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`},
+    {name:'xl/styles.xml', data: H + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'},
+    ...sheets.map((s, i) => ({name:`xl/worksheets/sheet${i + 1}.xml`, data:sheetXml(s.rows)}))
+  ]);
+}
+const XLSX_T = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+const safe = s => String(s).replace(/[\\\/:*?"<>|]+/g, '-').replace(/\s+/g, '_').trim().slice(0, 50) || 'sin_nombre';
+function stamp(){ const d = new Date(), p = n => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`; }
+async function download(bytes, name, type){
+  if (IOS && navigator.canShare){
+    try{ const file = new File([bytes], name, {type}); if (navigator.canShare({files:[file]})){ await navigator.share({files:[file], title:name}); return; } }
+    catch(e){ if (e && e.name === 'AbortError') return; }
+  }
+  const url = URL.createObjectURL(new Blob([bytes], {type}));
+  const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+
+/* ================= Escáner con cámara ================= */
 const CAM = {stream:null, track:null, timer:null, detector:null, zx:null, torch:false, canvas:document.createElement('canvas'), last:{code:null, seen:0}, lastAdded:null};
-const CAM_GAP = 2500;   // el mismo código seguido delante de la cámara solo cuenta una vez
+const CAM_GAP = 2500;
 const BD_FORMATS = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'code_93', 'itf', 'codabar', 'qr_code', 'data_matrix'];
+const camOpen = () => !$('#cam').hidden;
 function loadZxing(){
   if (window.ZXing) return Promise.resolve();
-  return new Promise((res, rej) => {
-    const s = document.createElement('script'); s.src = 'zxing.min.js';
-    s.onload = res; s.onerror = () => rej(new Error('No se ha podido cargar el lector de códigos (zxing.min.js).'));
-    document.head.appendChild(s);
-  });
+  return new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'zxing.min.js'; s.onload = res; s.onerror = () => rej(new Error('No se ha podido cargar el lector de códigos.')); document.head.appendChild(s); });
 }
 async function setupDecoder(){
   if (CAM.detector || CAM.zx) return;
   if ('BarcodeDetector' in window){
-    try{
-      const sup = await BarcodeDetector.getSupportedFormats(), f = BD_FORMATS.filter(x => sup.includes(x));
-      if (f.includes('ean_13') && f.includes('code_128')){ CAM.detector = new BarcodeDetector({formats:f}); return; }
-    }catch(e){}
+    try{ const sup = await BarcodeDetector.getSupportedFormats(), f = BD_FORMATS.filter(x => sup.includes(x)); if (f.includes('ean_13') && f.includes('code_128')){ CAM.detector = new BarcodeDetector({formats:f}); return; } }catch(e){}
   }
   await loadZxing();
   const Z = window.ZXing, F = Z.BarcodeFormat, hints = new Map();
@@ -1309,27 +1378,23 @@ async function setupDecoder(){
   hints.set(Z.DecodeHintType.TRY_HARDER, true);
   CAM.zx = new Z.MultiFormatReader(); CAM.zx.setHints(hints);
 }
-function zxDecodeCanvas(canvas){
-  const Z = window.ZXing;
-  try{ return CAM.zx.decodeWithState(new Z.BinaryBitmap(new Z.HybridBinarizer(new Z.HTMLCanvasElementLuminanceSource(canvas)))).getText(); }
-  catch(e){ return null; }
-}
+function zxDecodeCanvas(canvas){ const Z = window.ZXing; try{ return CAM.zx.decodeWithState(new Z.BinaryBitmap(new Z.HybridBinarizer(new Z.HTMLCanvasElementLuminanceSource(canvas)))).getText(); }catch(e){ return null; } }
 async function camTick(){
   if (!camOpen() || !CAM.stream) return;
   const v = $('#camVideo'); let code = null;
-  try{
-    if (v.readyState >= 2 && v.videoWidth){
-      if (CAM.detector){ const r = await CAM.detector.detect(v); if (r.length) code = r[0].rawValue; }
-      else {
-        // Se analiza la franja central (donde está el recuadro), reducida para ir rápido
-        const vw = v.videoWidth, vh = v.videoHeight, sx = vw * .04, sy = vh * .25, sw = vw * .92, sh = vh * .5;
-        const k = Math.min(1, 1000 / sw), c = CAM.canvas;
-        c.width = Math.round(sw * k); c.height = Math.round(sh * k);
-        c.getContext('2d', {willReadFrequently:true}).drawImage(v, sx, sy, sw, sh, 0, 0, c.width, c.height);
-        code = zxDecodeCanvas(c);
+  if (!document.querySelector('dialog[open]')){
+    try{
+      if (v.readyState >= 2 && v.videoWidth){
+        if (CAM.detector){ const r = await CAM.detector.detect(v); if (r.length) code = r[0].rawValue; }
+        else {
+          const vw = v.videoWidth, vh = v.videoHeight, sx = vw * .04, sy = vh * .25, sw = vw * .92, sh = vh * .5, k = Math.min(1, 1000 / sw), c = CAM.canvas;
+          c.width = Math.round(sw * k); c.height = Math.round(sh * k);
+          c.getContext('2d', {willReadFrequently:true}).drawImage(v, sx, sy, sw, sh, 0, 0, c.width, c.height);
+          code = zxDecodeCanvas(c);
+        }
       }
-    }
-  }catch(e){ console.warn(e); }
+    }catch(e){ console.warn(e); }
+  }
   if (code) onCamCode(String(code).trim());
   CAM.timer = setTimeout(camTick, CAM.detector ? 80 : 110);
 }
@@ -1340,22 +1405,17 @@ function onCamCode(code){
   CAM.last = {code, seen:t};
   const q = parseQty($('#camQty').value);
   if (!isFinite(q) || q === 0){ fail('La cantidad no es válida.'); return; }
-  addScan(code, q, false);
-  CAM.lastAdded = code; $('#camAgain').disabled = false;
-  if (!$('#fixQty').checked) $('#camQty').value = '1';
+  if (addScan(code, q, false)){ CAM.lastAdded = code; $('#camAgain').disabled = false; $('#camQty').value = '1'; }
   const fr = $('#camFrame'); fr.classList.add('hit'); setTimeout(() => fr.classList.remove('hit'), 450);
 }
 async function openCam(){
-  const z = activeZone(); if (!guard(z)) return;
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    alert('Este navegador no permite usar la cámara aquí. Abre la app desde https://aquitaniamobles.github.io/inventario/ con Chrome (Android) o Safari (iPhone).'); return;
-  }
+  const z = curZone(); if (!z || z.status !== 'open') return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ alert('Este navegador no permite usar la cámara aquí. Usa Chrome (Android) o Safari (iPhone).'); return; }
   try{ actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume && actx.resume(); }catch(e){}
-  $('#camZone').textContent = z.name;
-  $('#camQty').value = $('#qty').value || '1';
+  $('#camZone').textContent = z.name; $('#camQty').value = $('#qty').value || '1';
   showLast('', 'Apunta al código de barras…');
   $('#camAgain').disabled = true; CAM.last = {code:null, seen:0}; CAM.lastAdded = null;
-  $('#cam').hidden = false; document.body.style.overflow = 'hidden'; closeDrawer();
+  $('#cam').hidden = false; document.body.style.overflow = 'hidden';
   if (document.activeElement) document.activeElement.blur();
   try{
     $('#camHint').textContent = 'Abriendo la cámara…';
@@ -1372,10 +1432,7 @@ async function openCam(){
     camTick();
   }catch(e){
     console.error(e); closeCam();
-    alert(e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')
-      ? 'No hay permiso para usar la cámara. Permítelo (candado de la barra de direcciones, o Ajustes del móvil → navegador → Cámara) y vuelve a intentarlo.'
-      : e && e.name === 'NotFoundError' ? 'No se ha encontrado ninguna cámara en este dispositivo.'
-      : 'No se ha podido abrir la cámara: ' + (e && e.message || e));
+    alert(e && (e.name === 'NotAllowedError' || e.name === 'SecurityError') ? 'No hay permiso para usar la cámara. Permítelo en los ajustes del navegador y vuelve a intentarlo.' : e && e.name === 'NotFoundError' ? 'No se ha encontrado ninguna cámara.' : 'No se ha podido abrir la cámara: ' + (e && e.message || e));
   }
 }
 function closeCam(){
@@ -1383,44 +1440,24 @@ function closeCam(){
   if (CAM.stream) CAM.stream.getTracks().forEach(t => t.stop());
   CAM.stream = null; CAM.track = null; $('#camVideo').srcObject = null;
   $('#cam').hidden = true; document.body.style.overflow = '';
-  renderTable(); updateFocus();
+  renderZone();
 }
 $('#camBtn').addEventListener('click', openCam);
 $('#camClose').addEventListener('click', closeCam);
-$('#camAgain').addEventListener('click', () => {
-  if (!CAM.lastAdded) return;
-  const q = parseQty($('#camQty').value);
-  addScan(CAM.lastAdded, isFinite(q) && q ? q : 1, false);
-  if (!$('#fixQty').checked) $('#camQty').value = '1';
-});
+$('#camAgain').addEventListener('click', () => { if (!CAM.lastAdded) return; const q = parseQty($('#camQty').value); addScan(CAM.lastAdded, isFinite(q) && q ? q : 1, false); $('#camQty').value = '1'; });
 $('#camUndo').addEventListener('click', () => { undo(); CAM.last = {code:null, seen:0}; });
-$('#camTorch').addEventListener('click', () => {
-  if (!CAM.track) return; CAM.torch = !CAM.torch;
-  CAM.track.applyConstraints({advanced:[{torch:CAM.torch}]}).catch(() => toast('La linterna no está disponible'));
-});
+$('#camTorch').addEventListener('click', () => { if (!CAM.track) return; CAM.torch = !CAM.torch; CAM.track.applyConstraints({advanced:[{torch:CAM.torch}]}).catch(() => toast('La linterna no está disponible')); });
 document.addEventListener('visibilitychange', () => { if (document.hidden && camOpen()) closeCam(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && camOpen()) closeCam(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && camOpen() && !document.querySelector('dialog[open]')) closeCam(); });
 
-/* ================= Inicio ================= */
-if (!window.showSaveFilePicker) $('#fileBackupBtn').hidden = true;   // no existe en móviles ni en Safari/Firefox
-if (!S.active && S.zones.length) S.active = S.zones[S.zones.length - 1].id;
-renderCatBox();
-render();
-// App instalable (solo cuando se abre desde internet, p. ej. GitHub Pages)
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  navigator.serviceWorker.register('sw.js').catch(e => console.warn('Service worker', e));
-}
+/* ================= App instalable ================= */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW', e));
 let installEvt = null;
 window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('#installBtn').hidden = false; });
-$('#installBtn').addEventListener('click', async () => {
-  if (!installEvt) return;
-  installEvt.prompt(); await installEvt.userChoice; installEvt = null; $('#installBtn').hidden = true;
-});
-window.addEventListener('appinstalled', () => { $('#installBtn').hidden = true; toast('✔ App instalada. La tienes en el escritorio y en el menú Inicio.'); });
-idbGet('catalog').then(c => { if (c && c.rows){ CAT = buildCatIndex(c); renderCatBox(); render(); } }).catch(e => console.warn('Catálogo no disponible', e));
-setSave('ok', S.zones.length ? '✔ Datos recuperados' : 'Sin cambios');
-focusScan();
-if (!S.device) setTimeout(() => toast('Consejo: escribe arriba el nombre de este equipo o persona'), 600);
+$('#installBtn').addEventListener('click', async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; $('#installBtn').hidden = true; });
+try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
+
+boot();
 </script>
 </body>
 </html>
