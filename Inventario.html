@@ -230,6 +230,7 @@ dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8
   </header>
   <nav class="tabs" id="tabs" hidden>
     <button data-tab="count" class="on">📦 Contar</button>
+    <button data-tab="live">🕒 En curso <span id="liveBadge" class="badge b-blue" hidden></span></button>
     <button data-tab="subs">📥 Recibidos <span id="subsBadge" class="badge b-blue" hidden></span></button>
     <button data-tab="cat">📋 Catálogo</button>
     <button data-tab="users">👥 Usuarios</button>
@@ -254,6 +255,7 @@ dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8
         <button id="backBtn">← Zonas</button>
         <div class="zt" id="zTitle"></div>
         <span id="zBadge"></span>
+        <span id="zCloud" class="badge"></span>
       </div>
       <div class="zstats" id="zStats"></div>
 
@@ -275,9 +277,17 @@ dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8
         <input id="search" placeholder="🔍 Buscar en esta zona" autocomplete="off">
         <button id="findBtn">📖 Buscar producto</button>
         <button id="undoBtn">↶ Deshacer</button>
+        <button id="zSave">💾 Guardar</button>
       </div>
       <div class="items" id="items"></div>
       <div class="row" style="justify-content:center;margin-top:14px"><button class="link" id="zDelete">Eliminar esta zona</button></div>
+    </section>
+
+    <!-- ---------- ADMIN: zonas en curso ---------- -->
+    <section id="liveView" hidden>
+      <h2>Zonas en curso</h2>
+      <p class="muted small" style="margin-top:-6px">Lo que cada persona está contando ahora mismo. Se guarda solo en el servidor unos segundos después de cada escaneo, así que si un móvil se pierde o falla, aquí está la última copia. Al entrar con el mismo usuario en otro dispositivo, sus zonas se recuperan solas.</p>
+      <div id="liveList"></div>
     </section>
 
     <!-- ---------- ADMIN: recibidos ---------- -->
@@ -552,7 +562,8 @@ const lkey = () => 'inv.v2.' + ME.id;
 let dirty = false, saveTimer = null;
 function loadLocal(){
   try{ L = JSON.parse(localStorage.getItem(lkey())); }catch(e){ L = null; }
-  L = Object.assign({zones:[], active:null, undo:[], outbox:[]}, L || {});
+  L = Object.assign({zones:[], active:null, undo:[], outbox:[], sync:{}}, L || {});
+  if (!L.sync) L.sync = {};
   // Traer zonas de la versión anterior de la app (sin usuarios), una sola vez
   try{
     const old = JSON.parse(localStorage.getItem('inventarioAgil.v1'));
@@ -564,7 +575,66 @@ function loadLocal(){
     }
   }catch(e){}
 }
-function changed(){ dirty = true; clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 200); }
+function changed(){
+  dirty = true; clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 200);
+  const z = curZone(); if (z) markZone(z.id);
+}
+
+/* ---- Copia en el servidor de las zonas (autoguardado unos segundos después de cada cambio) ---- */
+let zSyncTimer = null, zSyncing = false, lastCloud = 0, cloudErr = false;
+function markZone(id){ if (!L) return; L.sync[id] = (typeof L.sync[id] === 'number' ? L.sync[id] : 0) + 1; scheduleZoneSync(); renderCloud(); }
+function scheduleZoneSync(ms){ clearTimeout(zSyncTimer); zSyncTimer = setTimeout(syncZones, ms ?? 3000); }
+async function syncZones(){
+  if (!L || !ME) return true;
+  if (zSyncing){ scheduleZoneSync(1500); return false; }
+  const ids = Object.keys(L.sync); if (!ids.length){ renderCloud(); return true; }
+  zSyncing = true; renderCloud();
+  let ok = true;
+  for (const id of ids){
+    const v = L.sync[id];
+    try{
+      let r;
+      if (v === 'del') r = await SB.from('inv_zones_live').delete().eq('id', id);
+      else {
+        const z = L.zones.find(x => x.id === id);
+        if (!z){ delete L.sync[id]; continue; }
+        r = await SB.from('inv_zones_live').upsert({id:z.id, user_id:ME.id, user_name:ME.display_name, zone:z.name, status:z.status,
+          items:z.items, line_count:z.items.length, units:zoneUnits(z), created_at:new Date(z.created).toISOString(), updated_at:new Date().toISOString()});
+      }
+      if (r.error) throw r.error;
+      if (L.sync[id] === v) delete L.sync[id];   // si ha cambiado mientras se guardaba, se vuelve a guardar
+      lastCloud = now(); cloudErr = false;
+    }catch(e){ console.warn('syncZones', e); cloudErr = true; ok = false; break; }
+  }
+  zSyncing = false; saveNow(); renderCloud();
+  if (ok && Object.keys(L.sync).length) scheduleZoneSync(1000);
+  return ok;
+}
+function renderCloud(){
+  const el = $('#zCloud'), z = curZone(); if (!el || !z || !L) return;
+  const pend = L.sync[z.id] !== undefined;
+  if (pend && zSyncing){ el.className = 'badge b-blue'; el.textContent = '☁ Guardando…'; }
+  else if (pend){ el.className = 'badge b-rep'; el.textContent = (navigator.onLine && !cloudErr) ? '☁ Guardando en breve' : '📱 Guardado solo en el móvil'; }
+  else { el.className = 'badge b-ok'; el.textContent = '☁ Guardado' + (lastCloud ? ' ' + fmtT(lastCloud) : ''); }
+}
+// Recuperar en este dispositivo las zonas del usuario que están en el servidor y no aquí (móvil perdido, cambio de dispositivo…)
+async function restoreZones(){
+  try{
+    const {data, error} = await SB.from('inv_zones_live').select('id, zone, status, items, created_at, updated_at').eq('user_id', ME.id).neq('status', 'sent');
+    if (error) throw error;
+    const missing = (data || []).filter(r => !L.zones.some(z => z.id === r.id) && L.sync[r.id] !== 'del');
+    if (!missing.length) return;
+    const {data:subs} = await SB.from('inv_submissions').select('client_id').in('client_id', missing.map(r => r.id));
+    const sentIds = new Set((subs || []).map(s => s.client_id));
+    for (const r of missing){
+      const sent = sentIds.has(r.id);
+      L.zones.push({id:r.id, name:r.zone, created:Date.parse(r.created_at), status:sent ? 'sent' : 'open', sentAt:sent ? Date.parse(r.updated_at) : undefined, items:r.items || []});
+      if (sent) markZone(r.id);
+    }
+    saveNow(); renderHome();
+    toast(`☁ Recuperadas ${missing.length} zona${missing.length > 1 ? 's' : ''} guardada${missing.length > 1 ? 's' : ''} en el servidor`, 5000);
+  }catch(e){ console.warn('restoreZones', e); }
+}
 function saveNow(){
   if (!L || !ME) return false;
   clearTimeout(saveTimer);
@@ -572,10 +642,18 @@ function saveNow(){
   catch(e){ toast('⚠ No se ha podido guardar en el dispositivo: ' + e.message, 6000); return false; }
 }
 setInterval(() => { if (dirty) saveNow(); }, 15000);
-setInterval(() => saveNow(), 5 * 60 * 1000);   // guardado de seguridad cada 5 minutos
+setInterval(() => { saveNow(); syncZones(); }, 5 * 60 * 1000);   // guardado de seguridad cada 5 minutos
 window.addEventListener('beforeunload', () => { if (dirty) saveNow(); });
 document.addEventListener('visibilitychange', () => { if (document.hidden && dirty) saveNow(); });
-$('#saveBtn').addEventListener('click', () => { if (saveNow()) toast('💾 Guardado en este dispositivo'); });
+async function saveAll(){
+  const z = curZone(); if (z) markZone(z.id);
+  if (!saveNow()) return;
+  clearTimeout(zSyncTimer);
+  toast('💾 Guardando…');
+  const ok = await syncZones();
+  toast(ok ? '💾 Guardado en el móvil y en el servidor' : '📱 Guardado en el móvil. Sin conexión: se subirá al servidor cuando vuelva internet', 4500);
+}
+$('#saveBtn').addEventListener('click', saveAll);
 
 /* ================= Catálogo compartido ================= */
 let CAT = null;          // {name, loaded, by, rows:[[erp,desc,[bcs]]], erpN, bc, desc}
@@ -650,7 +728,7 @@ async function flushOutbox(){
       else if (o.t === 'map') r = await SB.from('inv_barcode_map').upsert(o.p, {onConflict:'barcode', ignoreDuplicates:true});
       if (r.error) throw r.error;
       L.outbox = L.outbox.filter(x => x !== o);
-      if (o.t === 'sub'){ const z = L.zones.find(z => z.id === o.p.client_id); if (z){ z.status = 'sent'; z.sentAt = now(); } toast(`✔ Zona «${o.p.zone}» enviada`); }
+      if (o.t === 'sub'){ const z = L.zones.find(z => z.id === o.p.client_id); if (z){ z.status = 'sent'; z.sentAt = now(); markZone(z.id); } toast(`✔ Zona «${o.p.zone}» enviada`); }
       online = true; changed();
     }catch(e){ console.warn('flush', e); online = navigator.onLine && !/fetch|network/i.test(String(e.message || e)) ? online : false; break; }
   }
@@ -662,7 +740,7 @@ function renderSync(){
   if (!navigator.onLine || !online){ p.className = 'pill off'; p.textContent = n ? `🟠 Sin conexión · ${n} pendiente${n > 1 ? 's' : ''}` : '🟠 Sin conexión'; return; }
   p.className = 'pill on'; p.textContent = n ? `🟠 ${n} pendiente${n > 1 ? 's' : ''}` : '🟢 Conectado';
 }
-window.addEventListener('online', () => { online = true; flushOutbox(); syncCatalog(); syncMaps(); });
+window.addEventListener('online', () => { online = true; flushOutbox(); syncZones(); syncCatalog(); syncMaps(); });
 window.addEventListener('offline', () => { online = false; renderSync(); });
 
 /* ================= Arranque de la app ================= */
@@ -674,17 +752,18 @@ async function startApp(){
   loadLocal();
   await loadCatalogCache();
   renderAll(); showTab('count');
-  syncCatalog(); syncMaps(); flushOutbox();
-  if (isAdmin()){ loadSubs(); }
+  syncCatalog(); syncMaps(); flushOutbox(); syncZones(); restoreZones();
+  if (isAdmin()){ loadSubs(); loadLive(); }
   if (!RT){
     RT = SB.channel('inv-cambios')
       .on('postgres_changes', {event:'*', schema:'public', table:'inv_catalog_version'}, () => syncCatalog())
       .on('postgres_changes', {event:'*', schema:'public', table:'inv_barcode_map'}, () => syncMaps())
       .on('postgres_changes', {event:'*', schema:'public', table:'inv_submissions'}, () => { if (isAdmin()) loadSubs(); })
+      .on('postgres_changes', {event:'*', schema:'public', table:'inv_zones_live'}, () => { if (isAdmin()){ clearTimeout(liveTimer); liveTimer = setTimeout(loadLive, 1200); } })
       .subscribe(st => { if (st === 'SUBSCRIBED'){ online = true; renderSync(); } });
   }
-  setInterval(() => { syncCatalog(); flushOutbox(); }, 60000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden){ syncCatalog(); syncMaps(); flushOutbox(); if (isAdmin()) loadSubs(); } });
+  setInterval(() => { syncCatalog(); flushOutbox(); syncZones(); if (isAdmin()) renderLive(); }, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden){ syncCatalog(); syncMaps(); flushOutbox(); syncZones(); if (isAdmin()){ loadSubs(); loadLive(); } } });
 }
 
 /* ================= Pestañas (admin) ================= */
@@ -696,6 +775,8 @@ function showTab(t){
   $('#homeView').hidden = !(t === 'count' && !z);
   $('#zoneView').hidden = !(t === 'count' && z);
   $('#subsView').hidden = t !== 'subs';
+  $('#liveView').hidden = t !== 'live';
+  if (t === 'live') renderLive();
   $('#catView').hidden = t !== 'cat';
   $('#usersView').hidden = t !== 'users';
   $('#mapsView').hidden = t !== 'maps';
@@ -750,8 +831,10 @@ function renderZone(){
   $('#zDelete').textContent = open ? 'Eliminar esta zona' : 'Quitar de mi lista';
   $('#zDelete').hidden = z.status === 'pending';
   $('#finishBar').hidden = !(TAB === 'count' && open);
-  updateHint(); renderItems();
+  $('#zSave').hidden = !open;
+  updateHint(); renderItems(); renderCloud();
 }
+$('#zSave').addEventListener('click', saveAll);
 function renderItems(flash){
   const z = curZone(); if (!z) return;
   const q = fold($('#search').value.trim()), open = z.status === 'open';
@@ -844,7 +927,7 @@ $('#zDelete').addEventListener('click', () => {
   const z = curZone(); if (!z) return;
   if (z.status === 'open' && z.items.length && !confirm(`¿Eliminar la zona «${z.name}» con ${z.items.length} productos? Esto no se puede deshacer.`)) return;
   if (z.status === 'sent' && !confirm(`¿Quitar «${z.name}» de tu lista? (El administrador ya la tiene recibida.)`)) return;
-  L.zones = L.zones.filter(x => x !== z); L.active = null; changed(); renderHome(); showTab('count');
+  L.active = null; L.zones = L.zones.filter(x => x !== z); L.sync[z.id] = 'del'; changed(); scheduleZoneSync(500); renderHome(); showTab('count');
 });
 
 // Casilla de código (teclado o pistola lectora)
@@ -1029,6 +1112,53 @@ async function dlSubs(list, mode){
   }
   const ids = list.filter(s => !s.downloaded_at).map(s => s.id);
   if (ids.length){ await SB.from('inv_submissions').update({downloaded_at:new Date().toISOString()}).in('id', ids); loadSubs(); }
+}
+
+/* ================= ADMIN: zonas en curso (copia del servidor) ================= */
+let LIVE = [], liveTimer = null;
+async function loadLive(){
+  try{
+    const {data, error} = await SB.from('inv_zones_live').select('id, user_name, zone, status, items, line_count, units, created_at, updated_at').neq('status', 'sent').order('updated_at', {ascending:false});
+    if (error) throw error;
+    LIVE = data; renderLive();
+  }catch(e){ console.warn('loadLive', e); }
+}
+function ago(t){
+  const m = Math.round((now() - t) / 60000);
+  if (m < 1) return 'hace unos segundos';
+  if (m < 60) return `hace ${m} min`;
+  if (m < 24 * 60) return `hace ${Math.floor(m / 60)} h ${m % 60} min`;
+  return fmtDT(t);
+}
+function renderLive(){
+  $('#liveBadge').hidden = !LIVE.length; $('#liveBadge').textContent = LIVE.length;
+  if (TAB !== 'live') return;
+  $('#liveList').innerHTML = LIVE.map(z => {
+    const t = Date.parse(z.updated_at), quiet = now() - t > 30 * 60000;
+    return `<div class="subcard" style="grid-template-columns:1fr auto"><div><div class="t">${esc(z.zone)} ${z.status === 'pending' ? '<span class="badge b-rep">Terminada, enviándose</span>' : '<span class="badge b-blue">Contando</span>'} ${quiet ? '<span class="badge">sin cambios desde hace rato</span>' : ''}</div>
+      <div class="m">👤 ${esc(z.user_name)} · guardada ${ago(t)} · ${z.line_count} productos · ${fmtN(+z.units)} uds</div></div>
+      <div class="a"><button data-lview="${esc(z.id)}">Ver</button><button data-ldl="${esc(z.id)}">⬇ Copia Excel</button><button class="danger" data-ldel="${esc(z.id)}">🗑</button></div></div>`;
+  }).join('') || '<div class="empty">Ahora mismo nadie tiene zonas a medias.</div>';
+}
+$('#liveList').addEventListener('click', async e => {
+  const v = e.target.closest('[data-lview]'), d = e.target.closest('[data-ldl]'), x = e.target.closest('[data-ldel]');
+  const id = (v || d || x) && (v || d || x).dataset[v ? 'lview' : d ? 'ldl' : 'ldel'];
+  const z = LIVE.find(r => r.id === id); if (!z) return;
+  const lines = (z.items || []).map(it => [it.c, it.q]);
+  if (v) viewLines(`${z.zone} · ${z.user_name}`, `En curso · guardada ${ago(Date.parse(z.updated_at))} · ${z.line_count} productos · ${fmtN(+z.units)} unidades`, lines);
+  if (d) download(buildXlsx([{name:z.zone, rows:lines.slice().sort((a, b) => String(a[0]).localeCompare(String(b[0]), 'es', {numeric:true}))}]), `Copia_en_curso_${safe(z.zone)}_${safe(z.user_name)}_${stamp()}.xlsx`, XLSX_T);
+  if (x){
+    if (!confirm(`¿Borrar la copia del servidor de «${z.zone}» (${z.user_name})?\n\nSolo borra la copia de seguridad: si la persona sigue con la zona en su móvil, se volverá a guardar con el siguiente escaneo.`)) return;
+    const {error} = await SB.from('inv_zones_live').delete().eq('id', z.id);
+    if (error){ alert(error.message); return; }
+    loadLive();
+  }
+});
+function viewLines(title, sub, lines){
+  $('#vdTitle').textContent = title;
+  $('#vdBody').innerHTML = `<p class="muted small" style="margin-top:0">${esc(sub)}</p>` +
+    `<div class="items">${lines.map(([c, q]) => `<div class="it"><div class="c">${esc(c)}${isUnknown(c) ? ' <span class="badge b-bad">no está en catálogo</span>' : ''}</div><div class="q" style="cursor:default">${fmtN(q)}</div><div class="d">${esc(descOf(c))}</div></div>`).join('') || '<div class="empty">Sin productos todavía.</div>'}</div>`;
+  $('#viewDlg').showModal();
 }
 
 /* ================= ADMIN: catálogo ================= */
