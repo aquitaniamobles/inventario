@@ -156,6 +156,32 @@ dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8
 /* ---------- Cámara ---------- */
 #cam{position:fixed;inset:0;z-index:100;background:#000;display:flex;flex-direction:column;color:#fff}
 #cam > *{min-width:0}
+/* ---------- Etiquetas ---------- */
+.lblbtn{background:linear-gradient(135deg,#f2a93b,#e08a12);color:#14212f;border:0;margin-bottom:16px;box-shadow:0 6px 16px rgba(224,138,18,.3)}
+.lblbtn .badge{background:#14212f;color:#fff;margin-left:6px}
+.prbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:6px}
+.prbar .grow{flex:1;min-width:140px;font-weight:600}
+.prdot{width:12px;height:12px;border-radius:6px;background:#c2c8d0;flex-shrink:0}
+.prdot.on{background:var(--ok)} .prdot.busy{background:var(--accent)} .prdot.off{background:#c2c8d0}
+.chkrow{display:flex;align-items:center;gap:8px;font-weight:600}
+.chkrow input[type=checkbox]{width:22px;height:22px}
+.lblprev{width:280px;max-width:100%;aspect-ratio:2/1;background:#fff;border:2px solid #14212f;border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;justify-content:space-between;margin:12px auto 0;box-shadow:0 6px 16px rgba(0,0,0,.08)}
+.lblprev .lp-d{font-size:13px;font-weight:600;line-height:1.2;max-height:2.4em;overflow:hidden}
+.lblprev .lp-row{display:flex;justify-content:space-between;align-items:flex-end;gap:8px}
+.lblprev .lp-bc{height:34px;width:120px;background:repeating-linear-gradient(90deg,#111 0 2px,#fff 2px 3px,#111 3px 4px,#fff 4px 7px,#111 7px 10px,#fff 10px 11px)}
+.lblprev .lp-c{font-family:Consolas,monospace;font-size:12px}
+.lblprev .lp-p{font-size:26px;font-weight:800;white-space:nowrap}
+.tcard .pbar{margin-top:6px}
+.pbar{height:10px;background:var(--line2);border-radius:6px;overflow:hidden;margin:6px 0 4px}
+.pbar > div{height:100%;background:var(--ok);width:0;transition:width .3s}
+.tkind{display:grid;gap:8px;margin-bottom:12px}
+.tkind label{display:flex;gap:10px;align-items:flex-start;border:2px solid var(--line);border-radius:12px;padding:12px;cursor:pointer}
+.tkind label:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.tkind input{width:20px;height:20px;margin-top:2px}
+.flabel{display:block;font-size:13px;font-weight:700;color:var(--muted);margin:12px 0 4px}
+.tkusers{display:flex;flex-wrap:wrap;gap:6px 16px}
+.tkusers label{display:flex;align-items:center;gap:6px}
+.inline-print{margin-top:8px;padding:7px 12px;font-size:14px;font-weight:700}
 .camtop{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;padding-top:calc(10px + env(safe-area-inset-top));background:var(--navy)}
 .camtop b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .camtop button{background:var(--bad);color:#fff;border-color:var(--bad);font-weight:700}
@@ -235,12 +261,14 @@ dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8
     <button data-tab="cat">📋 Catálogo</button>
     <button data-tab="users">👥 Usuarios</button>
     <button data-tab="maps">🔗 Códigos asignados</button>
+    <button data-tab="labels">🏷 Etiquetas</button>
   </nav>
 
   <main>
     <!-- ---------- CONTAR: mis zonas ---------- -->
     <section id="homeView">
       <div id="catNotice"></div>
+      <button class="big lblbtn" id="goLabels">🏷 Imprimir etiquetas <span id="goLabelsBadge" class="badge" hidden></span></button>
       <h2>Mis zonas</h2>
       <form class="newzone" id="newZoneForm">
         <input id="newZoneName" placeholder="Nueva zona: Pasillo 3, Almacén…" autocomplete="off" enterkeyhint="go">
@@ -285,6 +313,59 @@ dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8
       <p class="muted small" id="stockNote" hidden style="margin:-4px 0 10px">El stock es el total del sistema. Si un producto está repartido en varias zonas, la diferencia de una sola zona es orientativa: compáralo al final con todo junto.</p>
       <div class="items" id="items"></div>
       <div class="row" style="justify-content:center;margin-top:14px"><button class="link" id="zDelete">Eliminar esta zona</button></div>
+    </section>
+
+    <!-- ---------- ETIQUETAS ---------- -->
+    <section id="labelsView" hidden>
+      <div class="zhead"><button id="lblBack">← Volver</button><div class="zt">🏷 Imprimir etiquetas</div></div>
+      <div class="prbar" id="prBar">
+        <span class="prdot" id="prDot"></span><span class="grow" id="prText">Impresora no conectada</span>
+        <button class="primary" id="prConnect">Conectar impresora</button>
+        <button id="prTest" hidden>Prueba</button>
+        <button id="prSettings" title="Ajustes de etiqueta">⚙</button>
+      </div>
+
+      <h3>Una etiqueta</h3>
+      <div class="card">
+        <button class="big dark" id="lblCam">📷 Escanear producto</button>
+        <div class="row" style="margin-top:10px">
+          <input id="lblCode" class="grow" placeholder="Código o descripción (ej.: taladro bosch)" autocomplete="off" enterkeyhint="search">
+          <button id="lblFind">Buscar</button>
+        </div>
+        <div id="lblResults"></div>
+        <div id="lblChosen" hidden>
+          <div id="lblPreview"></div>
+          <div class="row" style="margin-top:10px">
+            <label class="chkrow"><input type="checkbox" id="lblWithPrice"> Con precio</label>
+            <label class="chkrow">Copias <input id="lblCopies" value="1" inputmode="numeric" style="width:64px;text-align:center"></label>
+          </div>
+          <button class="big ok" id="lblPrint" style="margin-top:10px">🏷 Imprimir etiqueta</button>
+        </div>
+      </div>
+
+      <div class="row" style="justify-content:space-between;align-items:baseline"><h3>Tareas de etiquetado</h3><button class="primary" id="newTaskBtn" hidden>+ Nueva tarea</button></div>
+      <div id="taskList"></div>
+    </section>
+
+    <section id="taskView" hidden>
+      <div class="zhead"><button id="taskBack">← Etiquetas</button><div class="zt" id="tvTitle"></div><span id="tvBadge"></span></div>
+      <div class="zstats" id="tvStats"></div>
+      <div class="pbar"><div id="tvBar"></div></div>
+      <p class="muted small" id="tvHelp"></p>
+      <button class="big dark" id="tvCam">📷 Escanear productos</button>
+      <div class="scanbox">
+        <div class="row"><input id="tvScan" class="grow mono" placeholder="Código (o usa la pistola)" autocomplete="off" enterkeyhint="done"><button id="tvOk" class="primary">OK</button></div>
+      </div>
+      <div class="last" id="tvLast">Escanea un producto.</div>
+      <div class="tools">
+        <select id="tvFilter"><option value="pend">Pendientes</option><option value="done">Hechas</option><option value="all">Todas</option></select>
+        <input id="tvSearch" placeholder="🔍 Buscar en la tarea" autocomplete="off">
+        <button id="tvPrintAll" class="primary" hidden>🏷 Imprimir todas las pendientes</button>
+      </div>
+      <div class="items" id="tvItems"></div>
+      <div class="row" id="tvAdmin" style="justify-content:center;margin-top:14px" hidden>
+        <button id="tvExport">⬇ Excel de lo que falta</button><button id="tvArchive">Archivar tarea</button><button class="danger" id="tvDelete">Eliminar tarea</button>
+      </div>
     </section>
 
     <!-- ---------- ADMIN: zonas en curso ---------- -->
@@ -399,6 +480,51 @@ dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8
   <div class="df"><button id="fdBack">← Revisar diferencias</button><button class="ok" id="fdSend">✔ Enviar zona</button></div>
 </dialog>
 
+<dialog id="taskDlg">
+  <div class="dh">+ Nueva tarea de etiquetado <button data-close>Cancelar</button></div>
+  <div class="db">
+    <div class="tkind">
+      <label><input type="radio" name="tkKind" value="tarifa" checked><span><b>💶 Cambio de tarifa</b><br><small>Al escanear: si el producto está en la lista se imprime con el precio nuevo; si no, se avisa de que no cambia.</small></span></label>
+      <label><input type="radio" name="tkKind" value="lista"><span><b>📋 Lista de etiquetas</b><br><small>Imprimir las etiquetas de una lista (de una en una al escanear, o todas de golpe).</small></span></label>
+    </div>
+    <label class="flabel" for="tkName">Nombre de la tarea</label>
+    <input id="tkName" style="width:100%" placeholder="Ej.: Tarifa Bosch enero, Etiquetas almacén pasillo 2…">
+    <label class="flabel">Excel o CSV con los productos</label>
+    <div class="row"><button id="tkFileBtn">📂 Elegir archivo</button><span class="small muted" id="tkFileName">Columna de código y, si quieres, de precio y de copias.</span></div>
+    <input type="file" id="tkFile" accept=".xlsx,.csv,.txt" hidden>
+    <div id="tkMap" hidden>
+      <div class="maptbl"><table id="tkPreview"></table></div>
+      <div class="mapgrid">
+        <b>Código</b><select id="tkCode"></select>
+        <b>Precio</b><select id="tkPrice"></select>
+        <b>Copias</b><select id="tkCopies"></select>
+        <b>Primera fila</b><label><input type="checkbox" id="tkHeader"> Son títulos</label>
+      </div>
+      <p class="small muted" id="tkInfo"></p>
+    </div>
+    <label class="opt" id="tkWithPriceRow" hidden><input type="checkbox" id="tkWithPrice" checked><span><b>Etiquetas con precio</b></span></label>
+    <label class="flabel">¿Para quién?</label>
+    <div id="tkUsers" class="tkusers"></div>
+    <div class="err" id="tkErr"></div>
+  </div>
+  <div class="df"><button class="primary" id="tkCreate">Crear tarea</button></div>
+</dialog>
+
+<dialog id="prDlg">
+  <div class="dh">⚙ Ajustes de etiqueta <button data-close>Cerrar</button></div>
+  <div class="db">
+    <div class="form-grid">
+      <div><label class="flabel" for="loW">Ancho (mm)</label><input id="loW" inputmode="decimal"></div>
+      <div><label class="flabel" for="loH">Alto (mm)</label><input id="loH" inputmode="decimal"></div>
+    </div>
+    <label class="flabel" for="loSense">Separación entre etiquetas</label>
+    <select id="loSense" style="width:100%"><option value="bar">Marca negra detrás (rollos Zebra 3012910-T)</option><option value="gap">Hueco entre etiquetas (gap)</option></select>
+    <label class="opt" style="margin-top:12px"><input type="checkbox" id="loPrice"><span><b>Con precio por defecto</b></span></label>
+    <p class="small muted">Si la etiqueta sale descolocada o se salta etiquetas, prueba a cambiar el tipo de separación y pulsa «Prueba».</p>
+    <details><summary class="small muted">Diagnóstico Bluetooth</summary><pre class="small" id="prDiag" style="white-space:pre-wrap"></pre></details>
+  </div>
+</dialog>
+
 <dialog id="viewDlg">
   <div class="dh"><span id="vdTitle"></span><button data-close>Cerrar</button></div>
   <div class="db" id="vdBody"></div>
@@ -415,6 +541,7 @@ dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8
       <b>Código(s) de barras del proveedor</b><div class="bcs" id="mapBc"></div>
       <b>Descripción</b><select id="mapDesc"></select>
       <b>Stock actual</b><select id="mapStock"></select>
+      <b>Precio (PVP)</b><select id="mapPrice"></select>
       <b>Primera fila</b><label><input type="checkbox" id="mapHeader"> Son títulos, no un producto</label>
     </div>
     <p id="mapInfo" class="muted small"></p>
@@ -678,7 +805,12 @@ let EXTRA = Object.create(null);  // barcode normalizado → erp
 const norm = c => { let s = String(c).trim().toUpperCase(); if (/^\d+$/.test(s)) s = s.replace(/^0+(?=\d)/, ''); return s; };
 function buildCatIndex(c){
   c.erpN = Object.create(null); c.bc = Object.create(null); c.desc = Object.create(null); c.stock = Object.create(null); c.hasStock = false;
-  for (const [erp, d, , st] of c.rows){ c.erpN[norm(erp)] = erp; if (d) c.desc[erp] = d; if (st != null && isFinite(st)){ c.stock[erp] = +st; c.hasStock = true; } }
+  c.price = Object.create(null); c.hasPrice = false;
+  for (const [erp, d, , st, pr] of c.rows){
+    c.erpN[norm(erp)] = erp; if (d) c.desc[erp] = d;
+    if (st != null && isFinite(st)){ c.stock[erp] = +st; c.hasStock = true; }
+    if (pr != null && isFinite(pr)){ c.price[erp] = +pr; c.hasPrice = true; }
+  }
   for (const [erp, , bcs] of c.rows) for (const b of bcs || []){ const k = norm(b); if (!(k in c.bc)) c.bc[k] = erp; }
   return c;
 }
@@ -692,6 +824,16 @@ function resolve(raw){
 const descOf = c => CAT ? (CAT.desc[c] || CAT.desc[CAT.erpN[norm(c)]] || '') : '';
 // Stock del sistema (si el catálogo se importó con columna de stock). Productos del catálogo sin dato = 0.
 const hasStock = () => !!(CAT && CAT.hasStock);
+function priceOf(c){ if (!CAT || !CAT.hasPrice) return null; const k = c in CAT.price ? c : CAT.erpN[norm(c)]; return k != null && k in CAT.price ? CAT.price[k] : null; }
+// Precio escrito como 12,95 · 12.95 · 1.234,50 · 12,95 € → número
+function parsePrice(v){
+  let s = String(v ?? '').replace(/[€\s]/g, '').replace(/eur/i, '');
+  if (!s) return NaN;
+  if (s.includes(',') && s.includes('.')) s = s.lastIndexOf(',') > s.lastIndexOf('.') ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
+  else s = s.replace(',', '.');
+  const n = parseFloat(s); return isFinite(n) ? Math.round(n * 100) / 100 : NaN;
+}
+const fmtPrice = p => (p == null || !isFinite(p)) ? '' : Number(p).toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2});
 function stockOf(c){
   if (!hasStock()) return null;
   const k = c in CAT.stock ? c : CAT.erpN[norm(c)];
@@ -755,6 +897,7 @@ async function flushOutbox(){
       let r;
       if (o.t === 'sub') r = await SB.from('inv_submissions').upsert(o.p, {onConflict:'client_id', ignoreDuplicates:true});
       else if (o.t === 'map') r = await SB.from('inv_barcode_map').upsert(o.p, {onConflict:'barcode', ignoreDuplicates:true});
+      else if (o.t === 'done') r = await SB.from('inv_label_done').upsert(o.p, {onConflict:'task_id,code', ignoreDuplicates:true});
       if (r.error) throw r.error;
       L.outbox = L.outbox.filter(x => x !== o);
       if (o.t === 'sub'){ const z = L.zones.find(z => z.id === o.p.client_id); if (z){ z.status = 'sent'; z.sentAt = now(); markZone(z.id); } toast(`✔ Zona «${o.p.zone}» enviada`); loadHistory(); }
@@ -781,7 +924,7 @@ async function startApp(){
   loadLocal();
   await loadCatalogCache();
   renderAll(); showTab('count');
-  syncCatalog(); syncMaps(); flushOutbox(); syncZones(); restoreZones(); loadHistory();
+  syncCatalog(); syncMaps(); flushOutbox(); syncZones(); restoreZones(); loadHistory(); loadTasks();
   if (isAdmin()){ loadSubs(); loadLive(); }
   if (!RT){
     RT = SB.channel('inv-cambios')
@@ -789,6 +932,8 @@ async function startApp(){
       .on('postgres_changes', {event:'*', schema:'public', table:'inv_barcode_map'}, () => syncMaps())
       .on('postgres_changes', {event:'*', schema:'public', table:'inv_submissions'}, () => { if (isAdmin()) loadSubs(); loadHistory(); })
       .on('postgres_changes', {event:'*', schema:'public', table:'inv_zones_live'}, () => { if (isAdmin()){ clearTimeout(liveTimer); liveTimer = setTimeout(loadLive, 1200); } })
+      .on('postgres_changes', {event:'*', schema:'public', table:'inv_label_tasks'}, () => { clearTimeout(taskTimer); taskTimer = setTimeout(loadTasks, 800); })
+      .on('postgres_changes', {event:'*', schema:'public', table:'inv_label_done'}, () => { clearTimeout(taskTimer); taskTimer = setTimeout(loadTasks, 800); })
       .subscribe(st => { if (st === 'SUBSCRIBED'){ online = true; renderSync(); } });
   }
   setInterval(() => { syncCatalog(); flushOutbox(); syncZones(); if (isAdmin()) renderLive(); }, 60000);
@@ -806,6 +951,10 @@ function showTab(t){
   $('#subsView').hidden = t !== 'subs';
   $('#liveView').hidden = t !== 'live';
   if (t === 'live') renderLive();
+  $('#labelsView').hidden = t !== 'labels';
+  $('#taskView').hidden = t !== 'task';
+  if (t === 'labels') renderLabels();
+  if (t === 'task') renderTask();
   $('#catView').hidden = t !== 'cat';
   $('#usersView').hidden = t !== 'users';
   $('#mapsView').hidden = t !== 'maps';
@@ -877,7 +1026,7 @@ function renderItems(flash){
     return `<div class="it" data-c="${esc(r.c)}"><div class="c">${esc(r.c)} ${r.m ? '<span class="badge b-m">a mano</span>' : ''}${unk ? ' <span class="badge b-bad">no está en catálogo</span>' : ''}</div>
       <div class="q" ${open ? 'data-a="edit" title="Toca para corregir"' : ''}>${fmtN(r.q)}</div>
       <div class="d">${esc(descOf(r.c)) || '<span class="muted small">' + (r.n > 1 ? r.n + ' lecturas' : '') + '</span>'}${cmpHtml(r.c, r.q)}</div>
-      ${open ? `<div class="a"><button data-a="dec">−1</button><button data-a="inc">+1</button><button data-a="edit">✎ Cantidad</button><button data-a="del">🗑</button></div>` : ''}</div>`;
+      ${open ? `<div class="a"><button data-a="dec">−1</button><button data-a="inc">+1</button><button data-a="edit">✎ Cantidad</button><button data-a="del">🗑</button><button data-print="${esc(r.c)}" title="Imprimir etiqueta">🏷</button></div>` : `<div class="a"><button data-print="${esc(r.c)}">🏷 Etiqueta</button></div>`}</div>`;
   }).join('') || `<div class="empty">${q ? 'Nada coincide con la búsqueda.' : open ? 'Todavía no hay productos. ¡Empieza a escanear!' : 'Zona vacía.'}</div>`;
   if (flash){ const el = $('#items').querySelector(`[data-c="${CSS.escape(flash)}"]`); if (el){ el.classList.add('flash'); if (!camOpen()) el.scrollIntoView({block:'nearest'}); } }
 }
@@ -915,7 +1064,8 @@ function addScan(raw, qty, manual){
   changed(); renderItems(code); $('#zStats').textContent = zoneStats(z);
   const add = (qty > 0 ? '+' : '') + fmtN(qty), d = descOf(code), k = cmpOf(code, it.q);
   const extra = (d ? `<div class="desc">${esc(d)}</div>` : '') + (r.status === 'map' ? `<div class="via">🔁 Código de proveedor ${esc(raw)} → nuestro código <b>${esc(code)}</b></div>` : '') +
-    (k ? `<div class="via">📦 Stock en sistema: <b>${fmtN(k.s)}</b> · contado aquí: <b>${fmtN(it.q)}</b> · <span class="badge ${k.cls}">${k.txt}</span></div>` : '');
+    (k ? `<div class="via">📦 Stock en sistema: <b>${fmtN(k.s)}</b> · contado aquí: <b>${fmtN(it.q)}</b> · <span class="badge ${k.cls}">${k.txt}</span></div>` : '') +
+    `<button class="inline-print" data-print="${esc(code)}">🏷 Imprimir etiqueta</button>`;
   if (rep) showLast('rep', `<span class="big">YA ESTABA ✔ SUMADO</span><br><b class="mono">${esc(code)}</b> → total <b class="big">${fmtN(it.q)}</b> (${add})${extra}`);
   else showLast('new', `<span class="big">NUEVO ✔</span><br><b class="mono">${esc(code)}</b> → <b class="big">${fmtN(it.q)}</b>${extra}`);
   beep(rep ? 'rep' : 'new');
@@ -1003,6 +1153,7 @@ document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z' && (!inText || (ae === scan && !scan.value)) && TAB === 'count'){ e.preventDefault(); undo(); return; }
   // Una pistola lectora escribe como un teclado: si no hay ninguna casilla activa, lo mandamos a la del código
   if (!inText && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey && TAB === 'count' && curZone() && curZone().status === 'open' && !document.querySelector('dialog[open]') && !camOpen()) scan.focus();
+  if (!inText && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey && TAB === 'task' && !document.querySelector('dialog[open]') && !camOpen()) $('#tvScan').focus();
 });
 document.addEventListener('click', () => setTimeout(() => { const ae = document.activeElement; if (!TOUCH && TAB === 'count' && (!ae || ae === document.body || ae.tagName === 'BUTTON')) focusScan(); }, 0));
 
@@ -1310,7 +1461,7 @@ $('#histList').addEventListener('click', e => {
 function renderCat(){
   if (!$('#catStatus')) return;
   $('#catStatus').innerHTML = CAT
-    ? `<div class="kv"><b>Productos</b><span><b style="color:var(--text)">${CAT.rows.length.toLocaleString('es-ES')}</b></span><b>Códigos de proveedor</b><span>${Object.keys(CAT.bc).length.toLocaleString('es-ES')} + ${MAPS.length} asignados a mano</span><b>Stock</b><span>${hasStock() ? '✔ incluido: los vendedores ven el stock y las diferencias' : '✖ no incluido (vuelve a importar eligiendo la columna «Stock actual»)'}</span><b>Archivo</b><span>${esc(CAT.name)}</span><b>Actualizado</b><span>${fmtDT(CAT.loaded)}${CAT.by ? ' por ' + esc(CAT.by) : ''}</span></div>`
+    ? `<div class="kv"><b>Productos</b><span><b style="color:var(--text)">${CAT.rows.length.toLocaleString('es-ES')}</b></span><b>Códigos de proveedor</b><span>${Object.keys(CAT.bc).length.toLocaleString('es-ES')} + ${MAPS.length} asignados a mano</span><b>Precio</b><span>${CAT.hasPrice ? '✔ incluido: se puede imprimir con precio' : '✖ no incluido (vuelve a importar eligiendo la columna «Precio (PVP)»)'}</span><b>Stock</b><span>${hasStock() ? '✔ incluido: los vendedores ven el stock y las diferencias' : '✖ no incluido (vuelve a importar eligiendo la columna «Stock actual»)'}</span><b>Archivo</b><span>${esc(CAT.name)}</span><b>Actualizado</b><span>${fmtDT(CAT.loaded)}${CAT.by ? ' por ' + esc(CAT.by) : ''}</span></div>`
     : '<b>Todavía no hay catálogo.</b> Pulsa «Importar Excel de stock». Mientras no haya catálogo, los empleados pueden escanear cualquier código.';
   $('#optText').checked = OPTS.codeText; $('#optZero').checked = OPTS.skipZero;
 }
@@ -1447,14 +1598,17 @@ async function loadMapSheet(i){
   $('#mapStock').innerHTML = '<option value="-1">— no incluir stock —</option>' + opts;
   const stc = head.findIndex((x, c) => c > 0 && /stock|exist|disponib|^uds|unidades|cantidad/i.test(x));
   $('#mapStock').value = stc >= 0 ? String(stc) : '-1';
+  $('#mapPrice').innerHTML = '<option value="-1">— no incluir precio —</option>' + opts;
+  const prc = head.findIndex((x, c) => c > 0 && /precio|pvp|tarifa|price|importe/i.test(x));
+  $('#mapPrice').value = prc >= 0 ? String(prc) : '-1';
   $('#mapHeader').checked = head.some(x => /c[oó]d|ref|art[ií]c|descrip|ean|barra|nombre|prove/i.test(x));
   $('#mapPreview').innerHTML = `<tr><th></th>${Array.from({length:nc}, (_, c) => `<th>${colL(c)}</th>`).join('')}</tr>` +
     rows.slice(0, 8).map((r, ri) => `<tr><td class="muted">${ri + 1}</td>${Array.from({length:nc}, (_, c) => `<td>${esc(r[c] || '')}</td>`).join('')}</tr>`).join('');
   $('#mapInfo').textContent = `${rows.length.toLocaleString('es-ES')} filas. Si un producto tiene varios códigos de proveedor, pueden estar en varias filas, en varias columnas o separados por comas.`;
 }
 $('#mapGo').addEventListener('click', async () => {
-  const ec = +$('#mapErp').value, dc = +$('#mapDesc').value, sc = +$('#mapStock').value;
-  const bcs = [...$('#mapBc').querySelectorAll('input:checked')].map(x => +x.value).filter(c => c !== ec && c !== sc);
+  const ec = +$('#mapErp').value, dc = +$('#mapDesc').value, sc = +$('#mapStock').value, pc = +$('#mapPrice').value;
+  const bcs = [...$('#mapBc').querySelectorAll('input:checked')].map(x => +x.value).filter(c => c !== ec && c !== sc && c !== pc);
   if (!bcs.length && !confirm('No has marcado ninguna columna de código de barras de proveedor. Solo se reconocerán nuestros códigos. ¿Continuar?')) return;
   const src = $('#mapHeader').checked ? MAP.rows.slice(1) : MAP.rows;
   const byErp = new Map();
@@ -1464,6 +1618,7 @@ $('#mapGo').addEventListener('click', async () => {
     if (!e){ e = [erp, dc >= 0 ? (r[dc] || '') : '', []]; if (sc >= 0) e[3] = null; byErp.set(erp, e); }
     else if (!e[1] && dc >= 0) e[1] = r[dc] || '';
     if (sc >= 0 && e[3] == null){ const s = parseQty(r[sc] || ''); if (isFinite(s)) e[3] = round(s); }
+    if (pc >= 0){ if (e[3] === undefined) e[3] = null; if (e[4] == null){ const p = parsePrice(r[pc]); if (isFinite(p)) e[4] = p; } }
     for (const c of bcs) for (const b of String(r[c] || '').split(/[,;|\s]+/)) if (b && b !== erp && !e[2].includes(b)) e[2].push(b);
   }
   if (!byErp.size){ alert('No hay ningún código ERP en la columna elegida.'); return; }
@@ -1650,6 +1805,404 @@ async function download(bytes, name, type){
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
 
+/* ================= ETIQUETAS: impresora Zebra por Bluetooth (CPCL) ================= */
+const PR = {dev:null, ch:null, name:'', chunk:180, diag:[]};
+const LO = Object.assign({lw:50.8, lh:25.4, sense:'bar', price:true}, (() => { try{ return JSON.parse(localStorage.getItem('inv.lopts')) || {}; }catch(e){ return {}; } })());
+const saveLO = () => { try{ localStorage.setItem('inv.lopts', JSON.stringify(LO)); }catch(e){} };
+// Servicios BLE donde suelen recibir datos las impresoras (Zebra y genéricas)
+const BLE_SERVICES = ['38eb4a80-c570-11e3-9507-0002a5d5c51b', '49535343-fe7d-4ae5-8fa9-9fafd205e455', 'e7810a71-73ae-499d-8c15-faa9aef0c3f2', 0xff00, 0xffe0, 0x18f0, 0xfee7, 0xae30, 0xfff0];
+const ZEBRA_WRITE = '38eb4a82-c570-11e3-9507-0002a5d5c51b';
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+function setPrinterStatus(st, txt){
+  $('#prDot').className = 'prdot ' + st; $('#prText').textContent = txt;
+  $('#prConnect').textContent = st === 'on' ? 'Desconectar' : 'Conectar impresora';
+  $('#prConnect').className = st === 'on' ? '' : 'primary';
+  $('#prTest').hidden = st !== 'on';
+}
+async function connectPrinter(){
+  if (!navigator.bluetooth){
+    alert(IOS ? 'En iPhone el navegador no deja conectar impresoras Bluetooth. Usa un móvil Android con Chrome.' : 'Este navegador no permite Bluetooth. Abre la app con Google Chrome.');
+    return false;
+  }
+  try{
+    const dev = await navigator.bluetooth.requestDevice({acceptAllDevices:true, optionalServices:BLE_SERVICES});
+    return await attachPrinter(dev);
+  }catch(e){
+    if (e.name === 'NotFoundError') return false;   // el usuario canceló
+    setPrinterStatus('off', 'Impresora no conectada');
+    alert(e.name === 'SecurityError' ? 'Pulsa «Conectar impresora» para elegirla.' : 'No se ha podido conectar: ' + e.message);
+    return false;
+  }
+}
+async function attachPrinter(dev){
+  setPrinterStatus('busy', 'Conectando…');
+  const srv = await dev.gatt.connect();
+  let ch = null; PR.diag = [];
+  for (const s of await srv.getPrimaryServices()){
+    for (const c of await s.getCharacteristics().catch(() => [])){
+      PR.diag.push(`${s.uuid} → ${c.uuid}${c.properties.write ? ' [write]' : ''}${c.properties.writeWithoutResponse ? ' [writeNoResp]' : ''}`);
+      if (c.uuid === ZEBRA_WRITE) ch = c;
+      else if (!ch && (c.properties.write || c.properties.writeWithoutResponse)) ch = c;
+    }
+  }
+  $('#prDiag').textContent = (dev.name || '¿sin nombre?') + '\n' + (PR.diag.join('\n') || 'Sin servicios accesibles');
+  if (!ch){
+    srv.disconnect(); setPrinterStatus('off', 'Conectada, pero sin canal para imprimir');
+    alert('La impresora se ha conectado pero no ofrece un canal para enviarle etiquetas. Abre ⚙ → «Diagnóstico Bluetooth» y envía una captura a quien mantiene la app.');
+    return false;
+  }
+  PR.dev = dev; PR.ch = ch; PR.name = dev.name || 'Impresora';
+  if (!dev._invListen){ dev._invListen = true; dev.addEventListener('gattserverdisconnected', () => { PR.ch = null; setPrinterStatus('off', 'Impresora desconectada (pulsa para reconectar)'); }); }
+  try{ localStorage.setItem('inv.printerName', PR.name); }catch(e){}
+  setPrinterStatus('on', '✔ ' + PR.name);
+  await sendRaw(setupCmds()).catch(() => {});
+  return true;
+}
+async function ensurePrinter(){
+  if (PR.ch && PR.dev && PR.dev.gatt.connected) return true;
+  try{
+    if (PR.dev) return await attachPrinter(PR.dev);
+    if (navigator.bluetooth && navigator.bluetooth.getDevices){
+      const ds = await navigator.bluetooth.getDevices();
+      const d = ds.find(x => x.name && x.name === localStorage.getItem('inv.printerName')) || (ds.length === 1 ? ds[0] : null);
+      if (d) return await attachPrinter(d);
+    }
+  }catch(e){ console.warn('reconectar', e); }
+  return await connectPrinter();
+}
+async function sendRaw(str){
+  const data = new TextEncoder().encode(str);
+  let i = 0;
+  while (i < data.length){
+    const part = data.slice(i, i + PR.chunk);
+    try{
+      if (PR.ch.properties.writeWithoutResponse){ await PR.ch.writeValueWithoutResponse(part); await sleep(15); }
+      else await PR.ch.writeValueWithResponse(part);
+      i += part.length;
+    }catch(e){
+      if (PR.chunk > 20){ PR.chunk = 20; continue; }   // algunos equipos solo aceptan paquetes pequeños
+      throw e;
+    }
+  }
+}
+const setupCmds = () => `! U1 setvar "media.type" "label"\r\n! U1 setvar "media.sense_mode" "${LO.sense === 'gap' ? 'gap' : 'bar'}"\r\n`;
+// Texto seguro para la impresora (sin tildes ni símbolos que no tiene la fuente)
+const asc = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\x20-\x7E]/g, '').replace(/\s+/g, ' ').trim();
+function wrapText(s, n){
+  const out = []; let line = '';
+  for (const w of s.split(' ')){
+    if ((line + ' ' + w).trim().length > n){ if (line) out.push(line); line = w.slice(0, n); }
+    else line = (line + ' ' + w).trim();
+  }
+  if (line) out.push(line);
+  return out;
+}
+// Etiqueta en CPCL: descripción (2 líneas), código de barras Code 128, código y precio
+function cpclLabel(l){
+  const W = Math.round(LO.lw * 8), H = Math.round(LO.lh * 8);   // 203 dpi = 8 puntos por mm
+  const price = l.withPrice && l.price != null && isFinite(l.price) ? fmtPrice(l.price) : '';
+  const lines = wrapText(asc(l.desc), Math.max(10, Math.floor((W - 16) / 12))).slice(0, 2);
+  const code = asc(l.code);
+  const by = Math.round(H * 0.28), bh = Math.round(H * (price ? 0.25 : 0.36));
+  let s = `! 0 200 200 ${H} ${Math.max(1, Math.min(50, l.copies | 0 || 1))}\r\nPAGE-WIDTH ${W}\r\n`;
+  lines.forEach((t, i) => { s += `TEXT 7 0 8 ${4 + i * 24} ${t}\r\n`; });
+  s += `BARCODE 128 1 1 ${bh} 8 ${by} ${code}\r\nTEXT 7 0 8 ${by + bh + 4} ${code}\r\n`;
+  if (price) s += `RIGHT ${W - 8}\r\nTEXT 4 0 0 ${by + 2} ${price}\r\nTEXT 7 0 0 ${by + 52} EUR\r\nLEFT\r\n`;
+  return s + 'FORM\r\nPRINT\r\n';
+}
+async function printLabels(list){
+  if (!list.length) return false;
+  if (!await ensurePrinter()) return false;
+  try{
+    for (const l of list) await sendRaw(cpclLabel(l));
+    const n = list.reduce((a, l) => a + (l.copies | 0 || 1), 0);
+    toast(`🏷 ${n} etiqueta${n > 1 ? 's' : ''} enviada${n > 1 ? 's' : ''} a la impresora`);
+    return true;
+  }catch(e){
+    console.error(e); PR.ch = null; setPrinterStatus('off', 'Error al imprimir: reconecta');
+    alert('No se ha podido imprimir: ' + e.message + '\n\nComprueba que la impresora está encendida y cerca, y pulsa «Conectar impresora».');
+    return false;
+  }
+}
+const labelFor = (code, withPrice, copies, price) => ({code, desc:descOf(code), price: price ?? priceOf(code), withPrice, copies: copies || 1});
+function labelPreview(l){
+  const p = l.withPrice && l.price != null ? `<div class="lp-p">${fmtPrice(l.price)} €</div>` : '';
+  return `<div class="lblprev"><div class="lp-d">${esc(l.desc || '(sin descripción)')}</div><div class="lp-row"><div><div class="lp-bc"></div><div class="lp-c">${esc(l.code)}</div></div>${p}</div></div>`;
+}
+// Imprimir con un toque (desde el inventario o un aviso)
+async function quickLabel(code){
+  const r = resolve(code); const c = r.status === 'unknown' ? code : r.code;
+  const withPrice = LO.price && priceOf(c) != null;
+  await printLabels([labelFor(c, withPrice, 1)]);
+}
+document.addEventListener('click', e => { const b = e.target.closest('[data-print]'); if (b){ e.preventDefault(); quickLabel(b.dataset.print); } });
+
+$('#prConnect').addEventListener('click', async () => {
+  if (PR.ch && PR.dev && PR.dev.gatt.connected){ PR.dev.gatt.disconnect(); PR.ch = null; PR.dev = null; setPrinterStatus('off', 'Impresora no conectada'); return; }
+  await connectPrinter();
+});
+$('#prTest').addEventListener('click', () => printLabels([{code:'123456789', desc:'ETIQUETA DE PRUEBA Inventario Agil', price:12.95, withPrice:true, copies:1}]));
+$('#prSettings').addEventListener('click', () => {
+  $('#loW').value = String(LO.lw).replace('.', ','); $('#loH').value = String(LO.lh).replace('.', ',');
+  $('#loSense').value = LO.sense; $('#loPrice').checked = LO.price;
+  $('#prDlg').showModal();
+});
+$('#prDlg').addEventListener('close', async () => {
+  const w = parseQty($('#loW').value), h = parseQty($('#loH').value);
+  if (isFinite(w) && w >= 20 && w <= 80) LO.lw = w;
+  if (isFinite(h) && h >= 10 && h <= 150) LO.lh = h;
+  const senseChanged = LO.sense !== $('#loSense').value;
+  LO.sense = $('#loSense').value; LO.price = $('#loPrice').checked; saveLO();
+  if (senseChanged && PR.ch) await sendRaw(setupCmds()).catch(() => {});
+  renderSingle();
+});
+
+/* ---- Pantalla de etiquetas ---- */
+let SINGLE = null;   // producto elegido en «Una etiqueta»
+function openLabels(){ L.active = null; changed(); showTab('labels'); }
+$('#goLabels').addEventListener('click', openLabels);
+$('#lblBack').addEventListener('click', () => { renderHome(); showTab('count'); });
+function renderLabels(){
+  $('#newTaskBtn').hidden = !isAdmin();
+  $('#lblBack').hidden = isAdmin();
+  if (PR.ch && PR.dev && PR.dev.gatt.connected) setPrinterStatus('on', '✔ ' + PR.name);
+  else setPrinterStatus('off', navigator.bluetooth ? 'Impresora no conectada' : (IOS ? 'En iPhone no se puede imprimir por Bluetooth' : 'Este navegador no permite Bluetooth'));
+  renderSingle(); renderTasks();
+}
+function chooseSingle(code){
+  const r = resolve(code);
+  if (r.status === 'unknown'){ $('#lblResults').innerHTML = `<div class="notice bad">El código ${esc(code)} no está en el catálogo.</div>`; SINGLE = null; renderSingle(); beep('err'); return; }
+  SINGLE = r.code; $('#lblResults').innerHTML = ''; $('#lblCode').value = '';
+  $('#lblWithPrice').checked = LO.price && priceOf(SINGLE) != null; $('#lblCopies').value = '1';
+  renderSingle(); beep('new');
+  $('#lblChosen').scrollIntoView({block:'nearest', behavior:'smooth'});
+}
+function renderSingle(){
+  $('#lblChosen').hidden = !SINGLE; if (!SINGLE) return;
+  const p = priceOf(SINGLE);
+  $('#lblWithPrice').disabled = p == null;
+  $('#lblPreview').innerHTML = labelPreview(labelFor(SINGLE, $('#lblWithPrice').checked, 1)) +
+    (p == null ? '<p class="small muted" style="text-align:center">Sin precio en el catálogo: se imprimirá sin precio.</p>' : '') +
+    (hasStock() ? `<p class="small muted" style="text-align:center">Stock en sistema: ${fmtN(stockOf(SINGLE))}</p>` : '');
+}
+$('#lblWithPrice').addEventListener('change', renderSingle);
+function findSingle(){
+  const v = $('#lblCode').value.trim(); if (!v) return;
+  const r = resolve(v);
+  if (r.status === 'erp' || r.status === 'map'){ chooseSingle(v); return; }
+  if (!CAT){ toast('No hay catálogo cargado'); return; }
+  const words = fold(v).split(/\s+/), out = [];
+  for (const [erp, d] of CAT.rows){ const hay = fold(erp + ' ' + d); if (words.every(w => hay.includes(w))){ out.push([erp, d]); if (out.length >= 30) break; } }
+  $('#lblResults').innerHTML = out.length ? `<div class="items" style="margin-top:10px">${out.map(([erp, d]) => `<div class="res" data-pick="${esc(erp)}"><div><div class="c">${esc(erp)}</div><div class="small">${esc(d)}${priceOf(erp) != null ? ` · <b>${fmtPrice(priceOf(erp))} €</b>` : ''}</div></div><span class="badge b-blue">Elegir</span></div>`).join('')}</div>` : '<p class="muted">Ningún producto coincide.</p>';
+}
+$('#lblFind').addEventListener('click', findSingle);
+$('#lblCode').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); findSingle(); } });
+$('#lblResults').addEventListener('click', e => { const r = e.target.closest('[data-pick]'); if (r) chooseSingle(r.dataset.pick); });
+$('#lblCam').addEventListener('click', () => openCam({title:'Etiqueta de un producto', onCode: c => { closeCam(); chooseSingle(c); }}));
+$('#lblPrint').addEventListener('click', () => {
+  if (!SINGLE) return;
+  const n = Math.max(1, Math.min(50, parseInt($('#lblCopies').value, 10) || 1));
+  printLabels([labelFor(SINGLE, $('#lblWithPrice').checked && priceOf(SINGLE) != null, n)]);
+});
+
+/* ---- Tareas de etiquetado ---- */
+let TASKS = [], DONE = new Map(), TASK = null, taskTimer = null;
+async function loadTasks(){
+  if (!ME) return;
+  try{
+    const {data, error} = await SB.from('inv_label_tasks').select('id, kind, name, assigned, items, item_count, with_price, created_by_name, created_at').eq('archived', false).order('created_at', {ascending:false});
+    if (error) throw error;
+    TASKS = data;
+    DONE = new Map(data.map(t => [t.id, new Map()]));
+    if (data.length){
+      const {data:d, error:e2} = await SB.from('inv_label_done').select('task_id, code, copies, done_by_name, done_at').in('task_id', data.map(t => t.id));
+      if (e2) throw e2;
+      for (const r of d || []) DONE.get(r.task_id)?.set(r.code, r);
+    }
+    try{ localStorage.setItem('inv.tasks.' + ME.id, JSON.stringify({TASKS, done:[...DONE].map(([k, v]) => [k, [...v]])})); }catch(e){}
+  }catch(e){
+    console.warn('loadTasks', e);
+    if (!TASKS.length){ try{ const c = JSON.parse(localStorage.getItem('inv.tasks.' + ME.id)); if (c){ TASKS = c.TASKS; DONE = new Map(c.done.map(([k, v]) => [k, new Map(v)])); } }catch(_){} }
+  }
+  for (const o of (L ? L.outbox : []).filter(o => o.t === 'done')) DONE.get(o.p.task_id)?.set(o.p.code, {code:o.p.code, done_by_name:ME.display_name, done_at:new Date().toISOString(), pending:true});
+  if (TASK) TASK = TASKS.find(t => t.id === TASK.id) || null;
+  renderTasks(); if (TAB === 'task'){ if (TASK) renderTask(); else showTab('labels'); }
+}
+const taskDoneCount = t => (DONE.get(t.id) || new Map()).size;
+function renderTasks(){
+  const mine = TASKS.filter(t => taskDoneCount(t) < t.item_count);
+  $('#goLabelsBadge').hidden = !mine.length; $('#goLabelsBadge').textContent = `${mine.length} tarea${mine.length > 1 ? 's' : ''}`;
+  $('#taskList').innerHTML = TASKS.map(t => {
+    const d = taskDoneCount(t), pct = t.item_count ? Math.round(d * 100 / t.item_count) : 100;
+    const who = !t.assigned.length ? 'Para todos' : (isAdmin() && USERS.length ? t.assigned.map(id => (USERS.find(u => u.id === id) || {}).display_name || '¿?').join(', ') : 'Asignada a ti');
+    return `<div class="zcard tcard" data-task="${t.id}"><div class="zi">${t.kind === 'tarifa' ? '💶' : '📋'}</div><div class="grow"><div class="zn">${esc(t.name)}</div>
+      <div class="zs">${t.kind === 'tarifa' ? 'Cambio de tarifa' : 'Lista de etiquetas'} · ${d} de ${t.item_count} hechas · ${esc(who)}</div><div class="pbar"><div style="width:${pct}%"></div></div></div>
+      ${d >= t.item_count ? '<span class="badge b-ok">✔ Terminada</span>' : '<span class="badge b-blue">Abrir</span>'}</div>`;
+  }).join('') || `<div class="empty">No hay tareas de etiquetado${isAdmin() ? '. Crea una con «+ Nueva tarea».' : ' asignadas.'}</div>`;
+}
+$('#taskList').addEventListener('click', e => { const c = e.target.closest('[data-task]'); if (!c) return; TASK = TASKS.find(t => t.id === c.dataset.task); if (TASK){ $('#tvFilter').value = 'pend'; $('#tvSearch').value = ''; tvMsg('', 'Escanea un producto.'); showTab('task'); } });
+$('#taskBack').addEventListener('click', () => { TASK = null; showTab('labels'); });
+const taskPrice = (t, it) => it.p != null && isFinite(it.p) ? it.p : priceOf(it.c);
+const taskWithPrice = t => t.kind === 'tarifa' || t.with_price;
+function tvMsg(cls, html){ for (const el of [$('#tvLast'), $('#camLast')]){ el.className = 'last ' + cls; el.innerHTML = html; } }
+function renderTask(){
+  const t = TASK; if (!t) return;
+  const done = DONE.get(t.id) || new Map(), d = done.size;
+  $('#tvTitle').textContent = t.name;
+  $('#tvBadge').innerHTML = t.kind === 'tarifa' ? '<span class="badge b-rep">💶 Cambio de tarifa</span>' : '<span class="badge b-blue">📋 Lista</span>';
+  $('#tvStats').textContent = `${d} de ${t.item_count} hechas · faltan ${t.item_count - d}`;
+  $('#tvBar').style.width = (t.item_count ? Math.round(d * 100 / t.item_count) : 100) + '%';
+  $('#tvHelp').textContent = t.kind === 'tarifa'
+    ? 'Escanea las etiquetas de la tienda. Si el producto cambia de precio, se imprime la nueva al momento. Si no cambia, no hace falta etiqueta.'
+    : 'Escanea un producto de la lista para imprimir su etiqueta, o imprímelas todas de golpe.';
+  $('#tvPrintAll').hidden = t.kind !== 'lista' || d >= t.item_count;
+  $('#tvAdmin').hidden = !isAdmin();
+  const f = $('#tvFilter').value, q = fold($('#tvSearch').value.trim());
+  const rows = t.items.filter(it => (f === 'all' || (f === 'done') === done.has(it.c)) && (!q || fold(it.c + ' ' + descOf(it.c)).includes(q)));
+  $('#tvItems').innerHTML = rows.slice(0, 400).map(it => {
+    const r = done.get(it.c), p = taskPrice(t, it);
+    return `<div class="it"><div class="c">${esc(it.c)} ${it.n > 1 ? `<span class="badge">×${it.n}</span>` : ''}</div>
+      <div class="q" style="cursor:default;font-size:20px">${taskWithPrice(t) && p != null ? fmtPrice(p) + ' €' : ''}</div>
+      <div class="d">${esc(descOf(it.c))} ${r ? `<span class="badge b-ok">✔ ${esc(r.done_by_name || '')} ${r.done_at ? fmtT(Date.parse(r.done_at)) : ''}${r.pending ? ' (enviando)' : ''}</span>` : '<span class="badge b-rep">Pendiente</span>'}</div>
+      <div class="a"><button data-tprint="${esc(it.c)}">🏷 ${r ? 'Reimprimir' : 'Imprimir'}</button></div></div>`;
+  }).join('') + (rows.length > 400 ? `<p class="small muted">Se muestran 400 de ${rows.length}. Usa el buscador.</p>` : '') || `<div class="empty">${f === 'pend' ? '¡No queda nada pendiente! 🎉' : 'Nada en esta lista.'}</div>`;
+}
+$('#tvFilter').addEventListener('change', renderTask);
+$('#tvSearch').addEventListener('input', renderTask);
+function markDone(t, it, copies){
+  const p = {task_id:t.id, code:it.c, copies, done_by:ME.id, done_by_name:ME.display_name};
+  DONE.get(t.id)?.set(it.c, {code:it.c, done_by_name:ME.display_name, done_at:new Date().toISOString(), pending:true});
+  L.outbox.push({t:'done', p}); changed(); flushOutbox();
+}
+async function printTaskItem(t, it, reprint){
+  const ok = await printLabels([labelFor(it.c, taskWithPrice(t), it.n || 1, taskPrice(t, it))]);
+  if (ok && !reprint && !(DONE.get(t.id) || new Map()).has(it.c)) markDone(t, it, it.n || 1);
+  renderTask(); renderTasks();
+  return ok;
+}
+// Botones «Imprimir / Reimprimir» de la lista de la tarea y del aviso del último escaneo
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-tprint]'); if (!b || !TASK) return;
+  const it = TASK.items.find(x => x.c === b.dataset.tprint);
+  if (it) printTaskItem(TASK, it, (DONE.get(TASK.id) || new Map()).has(it.c));
+});
+async function taskScan(raw){
+  const t = TASK; if (!t) return;
+  raw = String(raw).trim(); if (!raw) return;
+  const r = resolve(raw), code = r.code, d = descOf(code);
+  const it = t.items.find(x => norm(x.c) === norm(code) || norm(x.c) === norm(raw));
+  if (!it){
+    if (t.kind === 'tarifa') tvMsg('new', `<span class="big">✔ NO CAMBIA</span><br><b class="mono">${esc(code)}</b> ${esc(d)}<div class="via">Este producto no cambia de precio: no hace falta etiqueta nueva.</div>`);
+    else tvMsg('err', `<b class="mono">${esc(code)}</b> ${esc(d)}<div class="via">No está en esta lista.</div>`);
+    beep(t.kind === 'tarifa' ? 'new' : 'err'); return;
+  }
+  const prev = (DONE.get(t.id) || new Map()).get(it.c);
+  const p = taskPrice(t, it);
+  if (prev){
+    tvMsg('rep', `<span class="big">YA HECHA</span><br><b class="mono">${esc(it.c)}</b> ${esc(d)}<div class="via">La imprimió ${esc(prev.done_by_name || '')}${prev.done_at ? ' a las ' + fmtT(Date.parse(prev.done_at)) : ''}.</div><button class="inline-print" data-tprint="${esc(it.c)}">🏷 Reimprimir</button>`);
+    beep('rep'); return;
+  }
+  tvMsg('rep', `<span class="big">🏷 ${t.kind === 'tarifa' ? 'CAMBIA DE PRECIO' : 'IMPRIMIENDO'}</span><br><b class="mono">${esc(it.c)}</b> ${esc(d)}${taskWithPrice(t) && p != null ? `<div class="via">Precio nuevo: <b class="big">${fmtPrice(p)} €</b></div>` : ''}`);
+  beep('rep');
+  if (await printTaskItem(t, it)) tvMsg('new', `<span class="big">✔ IMPRESA</span><br><b class="mono">${esc(it.c)}</b> ${esc(d)}${taskWithPrice(t) && p != null ? ` · <b>${fmtPrice(p)} €</b>` : ''}<div class="via">Ponla en el producto. Quedan ${t.item_count - taskDoneCount(t)}.</div>`);
+}
+$('#tvOk').addEventListener('click', () => { const v = $('#tvScan').value; $('#tvScan').value = ''; taskScan(v); });
+$('#tvScan').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === 'Tab'){ e.preventDefault(); const v = $('#tvScan').value; $('#tvScan').value = ''; taskScan(v); } });
+$('#tvCam').addEventListener('click', () => { if (TASK) openCam({title:TASK.name, onCode:taskScan}); });
+$('#tvPrintAll').addEventListener('click', async () => {
+  const t = TASK; if (!t) return;
+  const pend = t.items.filter(it => !(DONE.get(t.id) || new Map()).has(it.c));
+  const n = pend.reduce((a, it) => a + (it.n || 1), 0);
+  if (!pend.length || !confirm(`¿Imprimir ${n} etiqueta${n > 1 ? 's' : ''} pendientes de «${t.name}»?`)) return;
+  if (!await ensurePrinter()) return;
+  for (const it of pend){ if (!await printTaskItem(t, it)) break; }
+});
+// Admin: exportar lo que falta, archivar, eliminar
+$('#tvExport').addEventListener('click', () => {
+  const t = TASK; if (!t) return; const done = DONE.get(t.id) || new Map();
+  const rows = [['Código', 'Descripción', 'Precio', 'Copias', 'Estado', 'Hecha por']];
+  for (const it of t.items){ const r = done.get(it.c); rows.push([it.c, descOf(it.c), taskPrice(t, it) ?? '', it.n || 1, r ? 'Hecha' : 'Pendiente', r ? r.done_by_name || '' : '']); }
+  download(buildXlsx([{name:'Tarea', generic:true, rows}]), `Tarea_${safe(t.name)}_${stamp()}.xlsx`, XLSX_T);
+});
+$('#tvArchive').addEventListener('click', async () => {
+  const t = TASK; if (!t || !confirm(`¿Archivar «${t.name}»? Dejará de verse en las listas.`)) return;
+  const {error} = await SB.from('inv_label_tasks').update({archived:true}).eq('id', t.id);
+  if (error){ alert(error.message); return; }
+  TASK = null; showTab('labels'); loadTasks();
+});
+$('#tvDelete').addEventListener('click', async () => {
+  const t = TASK; if (!t || !confirm(`¿Eliminar «${t.name}» y su progreso? No se puede deshacer.`)) return;
+  const {error} = await SB.from('inv_label_tasks').delete().eq('id', t.id);
+  if (error){ alert(error.message); return; }
+  TASK = null; showTab('labels'); loadTasks();
+});
+
+/* ---- Admin: crear tarea ---- */
+let TK = null;   // {rows}
+$('#newTaskBtn').addEventListener('click', async () => {
+  TK = null; $('#tkName').value = ''; $('#tkFileName').textContent = 'Columna de código y, si quieres, de precio y de copias.'; $('#tkMap').hidden = true; $('#tkErr').textContent = '';
+  $('#taskDlg').showModal(); updateTkKind();
+  if (!USERS.length){ try{ USERS = (await fnCall({action:'list'})).users; }catch(e){} }
+  $('#tkUsers').innerHTML = `<label><input type="checkbox" id="tkAll" checked> <b>Todos</b></label>` +
+    USERS.filter(u => u.active).map(u => `<label><input type="checkbox" class="tkU" value="${u.id}"> ${esc(u.display_name)}</label>`).join('');
+  $('#tkAll').addEventListener('change', e => { if (e.target.checked) document.querySelectorAll('.tkU').forEach(c => c.checked = false); });
+  document.querySelectorAll('.tkU').forEach(c => c.addEventListener('change', () => { $('#tkAll').checked = ![...document.querySelectorAll('.tkU')].some(x => x.checked); }));
+});
+function updateTkKind(){ const k = document.querySelector('input[name=tkKind]:checked').value; $('#tkWithPriceRow').hidden = k !== 'lista'; }
+document.querySelectorAll('input[name=tkKind]').forEach(r => r.addEventListener('change', updateTkKind));
+$('#tkFileBtn').addEventListener('click', () => $('#tkFile').click());
+$('#tkFile').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try{
+    const buf = await f.arrayBuffer(), sig = new Uint8Array(buf.slice(0, 4));
+    let rows;
+    if (sig[0] === 0xD0 && sig[1] === 0xCF) throw new Error('Es un Excel antiguo (.xls): guárdalo como .xlsx o CSV.');
+    if (sig[0] === 0x50 && sig[1] === 0x4B) rows = await (await readXlsx(buf))[0].load();
+    else { let txt; try{ txt = new TextDecoder('utf-8', {fatal:true}).decode(buf); }catch(_){ txt = new TextDecoder('windows-1252').decode(buf); } rows = parseCsv(txt); }
+    if (!rows.length) throw new Error('El archivo está vacío.');
+    TK = {rows}; $('#tkFileName').textContent = `${f.name} · ${rows.length} filas`;
+    if (!$('#tkName').value.trim()) $('#tkName').value = f.name.replace(/\.[^.]+$/, '');
+    const nc = Math.max(...rows.slice(0, 200).map(r => r.length)), head = rows[0];
+    const opts = Array.from({length:nc}, (_, c) => `<option value="${c}">Columna ${colL(c)}${head[c] ? ' · ' + esc(String(head[c]).slice(0, 22)) : ''}</option>`).join('');
+    $('#tkCode').innerHTML = opts; $('#tkCode').value = '0';
+    $('#tkPrice').innerHTML = '<option value="-1">— sin precio (usar el del catálogo) —</option>' + opts;
+    $('#tkCopies').innerHTML = '<option value="-1">— 1 copia de cada —</option>' + opts;
+    const pc = head.findIndex((x, c) => c > 0 && /precio|pvp|tarifa|price|importe/i.test(x));
+    const cc = head.findIndex((x, c) => c > 0 && /copias|cantidad|uds|unidades|etiquetas/i.test(x));
+    $('#tkPrice').value = pc >= 0 ? String(pc) : (nc > 1 && rows.slice(1, 30).filter(r => isFinite(parsePrice(r[1]))).length > 10 ? '1' : '-1');
+    $('#tkCopies').value = cc >= 0 ? String(cc) : '-1';
+    $('#tkHeader').checked = head.some(x => /c[oó]d|ref|art|precio|pvp|desc/i.test(x));
+    $('#tkPreview').innerHTML = `<tr><th></th>${Array.from({length:nc}, (_, c) => `<th>${colL(c)}</th>`).join('')}</tr>` + rows.slice(0, 6).map((r, i) => `<tr><td class="muted">${i + 1}</td>${Array.from({length:nc}, (_, c) => `<td>${esc(r[c] || '')}</td>`).join('')}</tr>`).join('');
+    $('#tkMap').hidden = false;
+  }catch(err){ alert('No se ha podido leer el archivo:\n' + err.message); }
+});
+$('#tkCreate').addEventListener('click', async () => {
+  const kind = document.querySelector('input[name=tkKind]:checked').value, name = $('#tkName').value.trim();
+  if (!name){ $('#tkErr').textContent = 'Pon un nombre a la tarea.'; return; }
+  if (!TK){ $('#tkErr').textContent = 'Elige el Excel con los productos.'; return; }
+  const cc = +$('#tkCode').value, pc = +$('#tkPrice').value, nc = +$('#tkCopies').value;
+  const src = $('#tkHeader').checked ? TK.rows.slice(1) : TK.rows;
+  const byCode = new Map(); let unknown = 0;
+  for (const r of src){
+    const raw = String(r[cc] || '').trim(); if (!raw) continue;
+    const res = resolve(raw); if (res.status === 'unknown') unknown++;
+    const c = res.status === 'unknown' || res.status === 'nocat' ? raw : res.code;
+    const p = pc >= 0 ? parsePrice(r[pc]) : NaN, n = nc >= 0 ? parseInt(r[nc], 10) : 1;
+    byCode.set(c, {c, p: isFinite(p) ? p : null, n: isFinite(n) && n > 0 ? Math.min(n, 50) : 1});
+  }
+  const items = [...byCode.values()];
+  if (!items.length){ $('#tkErr').textContent = 'No hay códigos en la columna elegida.'; return; }
+  if (kind === 'tarifa' && pc < 0 && !(CAT && CAT.hasPrice)){ $('#tkErr').textContent = 'Para un cambio de tarifa elige la columna de precio (o importa el catálogo con precio).'; return; }
+  if (unknown && !confirm(`${unknown} código(s) no están en el catálogo: se imprimirán sin descripción. ¿Crear la tarea igualmente?`)) return;
+  const assigned = $('#tkAll').checked ? [] : [...document.querySelectorAll('.tkU:checked')].map(c => c.value);
+  $('#tkCreate').disabled = true;
+  const {error} = await SB.from('inv_label_tasks').insert({kind, name, assigned, items, item_count:items.length, with_price: kind === 'tarifa' ? true : $('#tkWithPrice').checked, created_by:ME.id, created_by_name:ME.display_name});
+  $('#tkCreate').disabled = false;
+  if (error){ $('#tkErr').textContent = 'No se ha podido crear: ' + error.message; return; }
+  $('#taskDlg').close(); toast(`✔ Tarea «${name}» creada con ${items.length} productos`); loadTasks();
+});
+
 /* ================= Escáner con cámara ================= */
 const CAM = {stream:null, track:null, timer:null, detector:null, zx:null, torch:false, canvas:document.createElement('canvas'), last:{code:null, seen:0}, lastAdded:null};
 const CAM_GAP = 2500;
@@ -1695,17 +2248,23 @@ function onCamCode(code){
   const t = now();
   if (code === CAM.last.code && t - CAM.last.seen < CAM_GAP){ CAM.last.seen = t; return; }
   CAM.last = {code, seen:t};
+  if (CAM.onCode){ const fr = $('#camFrame'); fr.classList.add('hit'); setTimeout(() => fr.classList.remove('hit'), 450); CAM.onCode(code); return; }
   const q = parseQty($('#camQty').value);
   if (!isFinite(q) || q === 0){ fail('La cantidad no es válida.'); return; }
   if (addScan(code, q, false)){ CAM.lastAdded = code; $('#camAgain').disabled = false; $('#camQty').value = '1'; }
   const fr = $('#camFrame'); fr.classList.add('hit'); setTimeout(() => fr.classList.remove('hit'), 450);
 }
-async function openCam(){
-  const z = curZone(); if (!z || z.status !== 'open') return;
+// opts: {title, onCode} para usar la cámara fuera del inventario (etiquetas)
+async function openCam(opts){
+  opts = opts && opts.onCode ? opts : {};
+  if (!opts.onCode){ const z = curZone(); if (!z || z.status !== 'open') return; opts.title = z.name; }
+  CAM.onCode = opts.onCode || null;
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ alert('Este navegador no permite usar la cámara aquí. Usa Chrome (Android) o Safari (iPhone).'); return; }
   try{ actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume && actx.resume(); }catch(e){}
-  $('#camZone').textContent = z.name; $('#camQty').value = $('#qty').value || '1';
-  showLast('', 'Apunta al código de barras…');
+  $('#camZone').textContent = opts.title; $('#camQty').value = $('#qty').value || '1';
+  $('.cambar label').hidden = $('#camAgain').hidden = $('#camUndo').hidden = !!CAM.onCode;
+  if (CAM.onCode){ $('#camLast').className = 'last'; $('#camLast').textContent = 'Apunta al código de barras…'; }
+  else showLast('', 'Apunta al código de barras…');
   $('#camAgain').disabled = true; CAM.last = {code:null, seen:0}; CAM.lastAdded = null;
   $('#cam').hidden = false; document.body.style.overflow = 'hidden';
   if (document.activeElement) document.activeElement.blur();
@@ -1732,9 +2291,10 @@ function closeCam(){
   if (CAM.stream) CAM.stream.getTracks().forEach(t => t.stop());
   CAM.stream = null; CAM.track = null; $('#camVideo').srcObject = null;
   $('#cam').hidden = true; document.body.style.overflow = '';
-  renderZone();
+  const wasLabels = !!CAM.onCode; CAM.onCode = null;
+  if (wasLabels){ if (TASK) renderTask(); } else renderZone();
 }
-$('#camBtn').addEventListener('click', openCam);
+$('#camBtn').addEventListener('click', () => openCam());
 $('#camClose').addEventListener('click', closeCam);
 $('#camAgain').addEventListener('click', () => { if (!CAM.lastAdded) return; const q = parseQty($('#camQty').value); addScan(CAM.lastAdded, isFinite(q) && q ? q : 1, false); $('#camQty').value = '1'; });
 $('#camUndo').addEventListener('click', () => { undo(); CAM.last = {code:null, seen:0}; });
