@@ -247,6 +247,8 @@ dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8
         <button class="primary">+ Crear</button>
       </form>
       <div id="zoneList"></div>
+      <h3>📜 Mis envíos</h3>
+      <div id="histList"><div class="empty">Cargando…</div></div>
     </section>
 
     <!-- ---------- CONTAR: dentro de una zona ---------- -->
@@ -389,6 +391,12 @@ dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8
     <div class="row"><button id="saveBtn">💾 Guardar ahora</button><button id="installBtn" hidden>⬇ Instalar app</button><button id="helpBtn">? Ayuda</button></div>
   </div>
   <div class="df"><button class="danger" id="logoutBtn">Cerrar sesión</button></div>
+</dialog>
+
+<dialog id="finishDlg">
+  <div class="dh">✔ Terminar y enviar <button data-close>✕</button></div>
+  <div class="db" id="fdBody"></div>
+  <div class="df"><button id="fdBack">← Revisar diferencias</button><button class="ok" id="fdSend">✔ Enviar zona</button></div>
 </dialog>
 
 <dialog id="viewDlg">
@@ -568,6 +576,9 @@ function loadLocal(){
   try{ L = JSON.parse(localStorage.getItem(lkey())); }catch(e){ L = null; }
   L = Object.assign({zones:[], active:null, undo:[], outbox:[], sync:{}}, L || {});
   if (!L.sync) L.sync = {};
+  // Las zonas ya enviadas se ven en «Mis envíos» (desde el servidor); en el dispositivo se guardan 30 días
+  L.zones = L.zones.filter(z => !(z.status === 'sent' && z.sentAt && now() - z.sentAt > 30 * 86400000));
+  if (L.active && !L.zones.some(z => z.id === L.active)) L.active = null;
   // Traer zonas de la versión anterior de la app (sin usuarios), una sola vez
   try{
     const old = JSON.parse(localStorage.getItem('inventarioAgil.v1'));
@@ -746,7 +757,7 @@ async function flushOutbox(){
       else if (o.t === 'map') r = await SB.from('inv_barcode_map').upsert(o.p, {onConflict:'barcode', ignoreDuplicates:true});
       if (r.error) throw r.error;
       L.outbox = L.outbox.filter(x => x !== o);
-      if (o.t === 'sub'){ const z = L.zones.find(z => z.id === o.p.client_id); if (z){ z.status = 'sent'; z.sentAt = now(); markZone(z.id); } toast(`✔ Zona «${o.p.zone}» enviada`); }
+      if (o.t === 'sub'){ const z = L.zones.find(z => z.id === o.p.client_id); if (z){ z.status = 'sent'; z.sentAt = now(); markZone(z.id); } toast(`✔ Zona «${o.p.zone}» enviada`); loadHistory(); }
       online = true; changed();
     }catch(e){ console.warn('flush', e); online = navigator.onLine && !/fetch|network/i.test(String(e.message || e)) ? online : false; break; }
   }
@@ -770,13 +781,13 @@ async function startApp(){
   loadLocal();
   await loadCatalogCache();
   renderAll(); showTab('count');
-  syncCatalog(); syncMaps(); flushOutbox(); syncZones(); restoreZones();
+  syncCatalog(); syncMaps(); flushOutbox(); syncZones(); restoreZones(); loadHistory();
   if (isAdmin()){ loadSubs(); loadLive(); }
   if (!RT){
     RT = SB.channel('inv-cambios')
       .on('postgres_changes', {event:'*', schema:'public', table:'inv_catalog_version'}, () => syncCatalog())
       .on('postgres_changes', {event:'*', schema:'public', table:'inv_barcode_map'}, () => syncMaps())
-      .on('postgres_changes', {event:'*', schema:'public', table:'inv_submissions'}, () => { if (isAdmin()) loadSubs(); })
+      .on('postgres_changes', {event:'*', schema:'public', table:'inv_submissions'}, () => { if (isAdmin()) loadSubs(); loadHistory(); })
       .on('postgres_changes', {event:'*', schema:'public', table:'inv_zones_live'}, () => { if (isAdmin()){ clearTimeout(liveTimer); liveTimer = setTimeout(loadLive, 1200); } })
       .subscribe(st => { if (st === 'SUBSCRIBED'){ online = true; renderSync(); } });
   }
@@ -817,7 +828,8 @@ function renderCatNotice(){
 }
 function renderHome(){
   renderCatNotice();
-  const zs = L.zones.slice().sort((a, b) => (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1) || b.created - a.created);
+  renderHistory();
+  const zs = L.zones.filter(z => z.status !== 'sent').sort((a, b) => (a.status === 'open' ? 0 : 1) - (b.status === 'open' ? 0 : 1) || b.created - a.created);
   if (!zs.length){ $('#zoneList').innerHTML = `<div class="empty">Aún no tienes zonas.<br>Escribe arriba el nombre de la zona que vas a contar y pulsa <b>+ Crear</b>.</div>`; return; }
   $('#zoneList').innerHTML = zs.map(z => {
     const pend = z.status === 'pending', sent = z.status === 'sent';
@@ -1060,11 +1072,31 @@ $('#findRes').addEventListener('click', e => {
 });
 
 /* ================= Terminar y enviar ================= */
+// Antes de enviar: resumen con la comparativa con el stock
 $('#finishBtn').addEventListener('click', () => {
   const z = curZone(); if (!z || z.status !== 'open') return;
   if (!z.items.length){ toast('La zona está vacía: escanea algún producto antes de enviarla'); return; }
   const unk = z.items.filter(it => isUnknown(it.c)).length;
-  if (!confirm(`¿Terminar y enviar «${z.name}»?\n\n${z.items.length} productos · ${fmtN(zoneUnits(z))} unidades${unk ? `\n⚠ ${unk} con código que no está en el catálogo` : ''}\n\nDespués ya no se podrá modificar.`)) return;
+  let html = `<p style="margin-top:0"><b>${esc(z.name)}</b>: ${z.items.length} productos · ${fmtN(zoneUnits(z))} unidades</p>`;
+  if (unk) html += `<div class="notice bad">⚠ ${unk} producto(s) con código que no está en el catálogo.</div>`;
+  if (hasStock()){
+    const rows = z.items.map(it => ({it, k:cmpOf(it.c, it.q)})).filter(r => r.k);
+    const dif = rows.filter(r => r.k.d !== 0).sort((a, b) => Math.abs(b.k.d) - Math.abs(a.k.d));
+    html += `<div class="row" style="margin-bottom:10px"><span class="badge b-ok">✔ ${rows.length - dif.length} cuadran con el stock</span><span class="badge ${dif.length ? 'b-rep' : 'b-ok'}">⚠ ${dif.length} con diferencia</span></div>`;
+    html += dif.length
+      ? `<p class="small muted">Revisa estas diferencias antes de enviar. Si el producto también está en otra zona, la diferencia puede ser normal.</p><div class="items">${dif.map(({it, k}) => `<div class="it"><div class="c">${esc(it.c)}</div><div class="q" style="cursor:default">${fmtN(it.q)}</div><div class="d">${esc(descOf(it.c))} <span class="badge">Stock ${fmtN(k.s)}</span> <span class="badge ${k.cls}">${k.txt}</span></div></div>`).join('')}</div>`
+      : '<div class="notice info">Todo lo contado cuadra con el stock del sistema. 👍</div>';
+  }
+  html += '<p class="small muted">Después de enviar ya no se podrá modificar.</p>';
+  $('#fdBody').innerHTML = html;
+  $('#fdBack').hidden = !hasStock();
+  $('#finishDlg').showModal();
+});
+$('#fdBack').addEventListener('click', () => { $('#finishDlg').close(); $('#cmpFilter').value = 'diff'; renderItems(); window.scrollTo(0, $('#items').offsetTop - 120); });
+$('#fdSend').addEventListener('click', () => {
+  const z = curZone(); if (!z || z.status !== 'open') return;
+  $('#finishDlg').close();
+  const unk = z.items.filter(it => isUnknown(it.c)).length;
   const lines = z.items.slice().sort((a, b) => a.c.localeCompare(b.c, 'es', {numeric:true})).map(it => [it.c, it.q]);
   const p = {client_id:z.id, user_id:ME.id, user_name:ME.display_name, zone:z.name, lines, line_count:lines.length, units:zoneUnits(z), unknown_count:unk};
   z.status = 'pending'; L.outbox.push({t:'sub', p}); changed();
@@ -1222,10 +1254,57 @@ $('#liveList').addEventListener('click', async e => {
 });
 function viewLines(title, sub, lines){
   $('#vdTitle').textContent = title;
+  const st = hasStock();
+  let ok = 0, dif = 0;
+  if (st) for (const [c, q] of lines){ const k = cmpOf(c, +q); if (k) k.d === 0 ? ok++ : dif++; }
   $('#vdBody').innerHTML = `<p class="muted small" style="margin-top:0">${esc(sub)}</p>` +
-    `<div class="items">${lines.map(([c, q]) => `<div class="it"><div class="c">${esc(c)}${isUnknown(c) ? ' <span class="badge b-bad">no está en catálogo</span>' : ''}</div><div class="q" style="cursor:default">${fmtN(q)}</div><div class="d">${esc(descOf(c))}${cmpHtml(c, +q)}</div></div>`).join('') || '<div class="empty">Sin productos todavía.</div>'}</div>`;
+    (st ? `<div class="row" style="margin-bottom:8px"><span class="badge b-ok">✔ ${ok} cuadran</span><span class="badge ${dif ? 'b-rep' : 'b-ok'}">⚠ ${dif} con diferencia</span><select id="vlFilter" style="margin-left:auto"><option value="all">Todos</option><option value="diff">Solo diferencias</option><option value="ok">Solo los que cuadran</option></select></div>
+      <p class="muted small" style="margin-top:0">Comparado con el stock actual del catálogo (${fmtDT(CAT.loaded)}).</p>` : '') +
+    '<div class="items" id="vlItems"></div>';
+  const draw = () => {
+    const f = st ? $('#vlFilter').value : 'all';
+    let v = lines.map(([c, q]) => ({c, q:+q, k:cmpOf(c, +q)}));
+    if (f !== 'all') v = v.filter(r => r.k && (f === 'ok' ? r.k.d === 0 : r.k.d !== 0));
+    if (f === 'diff') v.sort((a, b) => Math.abs(b.k.d) - Math.abs(a.k.d));
+    $('#vlItems').innerHTML = v.map(({c, q}) => `<div class="it"><div class="c">${esc(c)}${isUnknown(c) ? ' <span class="badge b-bad">no está en catálogo</span>' : ''}</div><div class="q" style="cursor:default">${fmtN(q)}</div><div class="d">${esc(descOf(c))}${cmpHtml(c, q)}</div></div>`).join('') || '<div class="empty">Nada en esta lista.</div>';
+  };
+  if (st) $('#vlFilter').addEventListener('change', draw);
+  draw();
   $('#viewDlg').showModal();
 }
+
+/* ================= Mis envíos (historial de cada usuario, desde el servidor) ================= */
+let HIST = null;
+async function loadHistory(){
+  if (!ME) return;
+  try{
+    const {data, error} = await SB.from('inv_submissions').select('id, zone, lines, line_count, units, created_at').eq('user_id', ME.id).order('created_at', {ascending:false}).limit(60);
+    if (error) throw error;
+    HIST = data; try{ localStorage.setItem('inv.hist.' + ME.id, JSON.stringify(HIST)); }catch(e){}
+  }catch(e){
+    console.warn('loadHistory', e);
+    if (!HIST){ try{ HIST = JSON.parse(localStorage.getItem('inv.hist.' + ME.id)) || []; }catch(_){ HIST = []; } }
+  }
+  renderHistory();
+}
+function renderHistory(){
+  const el = $('#histList'); if (!el || HIST === null) return;
+  el.innerHTML = HIST.map(s => {
+    let cmp = '';
+    if (hasStock()){
+      let ok = 0, dif = 0;
+      for (const [c, q] of s.lines){ const k = cmpOf(c, +q); if (k) k.d === 0 ? ok++ : dif++; }
+      cmp = ` · <span style="color:var(--ok)">✔ ${ok} cuadran</span> · <span style="color:${dif ? 'var(--rep)' : 'var(--ok)'}">⚠ ${dif} con diferencia</span>`;
+    }
+    return `<div class="zcard" data-hist="${esc(s.id)}"><div class="zi">✅</div><div class="grow"><div class="zn">${esc(s.zone)}</div>
+      <div class="zs">Enviada ${fmtDT(Date.parse(s.created_at))} · ${s.line_count} productos · ${fmtN(+s.units)} uds${cmp}</div></div><span class="badge b-blue">${hasStock() ? 'Ver comparativa' : 'Ver'}</span></div>`;
+  }).join('') || '<div class="empty">Todavía no has enviado ninguna zona.</div>';
+}
+$('#histList').addEventListener('click', e => {
+  const c = e.target.closest('[data-hist]'); if (!c) return;
+  const s = HIST.find(x => x.id === c.dataset.hist); if (!s) return;
+  viewLines(s.zone, `Enviada ${fmtDT(Date.parse(s.created_at))} · ${s.line_count} productos · ${fmtN(+s.units)} unidades`, s.lines);
+});
 
 /* ================= ADMIN: catálogo ================= */
 function renderCat(){
