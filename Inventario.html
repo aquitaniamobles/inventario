@@ -275,10 +275,12 @@ dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8
 
       <div class="tools">
         <input id="search" placeholder="🔍 Buscar en esta zona" autocomplete="off">
+        <select id="cmpFilter" hidden><option value="all">Todos</option><option value="diff">Solo diferencias con stock</option><option value="ok">Solo los que cuadran</option></select>
         <button id="findBtn">📖 Buscar producto</button>
         <button id="undoBtn">↶ Deshacer</button>
         <button id="zSave">💾 Guardar</button>
       </div>
+      <p class="muted small" id="stockNote" hidden style="margin:-4px 0 10px">El stock es el total del sistema. Si un producto está repartido en varias zonas, la diferencia de una sola zona es orientativa: compáralo al final con todo junto.</p>
       <div class="items" id="items"></div>
       <div class="row" style="justify-content:center;margin-top:14px"><button class="link" id="zDelete">Eliminar esta zona</button></div>
     </section>
@@ -303,6 +305,7 @@ dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8
         <button id="dlSheets" class="primary">⬇ Excel (una hoja por zona)</button>
         <button id="dlZip">⬇ ZIP (un Excel por zona)</button>
         <button id="dlCons">⬇ Consolidado (todo sumado)</button>
+        <button id="cmpBtn">📊 Comparar con stock</button>
         <button id="delSubs" class="danger">🗑 Eliminar</button>
       </div>
       <div class="muted small" id="subsInfo"></div>
@@ -403,6 +406,7 @@ dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8
       <b>Código ERP (el que se sube)</b><select id="mapErp"></select>
       <b>Código(s) de barras del proveedor</b><div class="bcs" id="mapBc"></div>
       <b>Descripción</b><select id="mapDesc"></select>
+      <b>Stock actual</b><select id="mapStock"></select>
       <b>Primera fila</b><label><input type="checkbox" id="mapHeader"> Son títulos, no un producto</label>
     </div>
     <p id="mapInfo" class="muted small"></p>
@@ -662,8 +666,8 @@ let MAPS = [];           // códigos asignados [{barcode, raw_barcode, erp, crea
 let EXTRA = Object.create(null);  // barcode normalizado → erp
 const norm = c => { let s = String(c).trim().toUpperCase(); if (/^\d+$/.test(s)) s = s.replace(/^0+(?=\d)/, ''); return s; };
 function buildCatIndex(c){
-  c.erpN = Object.create(null); c.bc = Object.create(null); c.desc = Object.create(null);
-  for (const [erp, d] of c.rows){ c.erpN[norm(erp)] = erp; if (d) c.desc[erp] = d; }
+  c.erpN = Object.create(null); c.bc = Object.create(null); c.desc = Object.create(null); c.stock = Object.create(null); c.hasStock = false;
+  for (const [erp, d, , st] of c.rows){ c.erpN[norm(erp)] = erp; if (d) c.desc[erp] = d; if (st != null && isFinite(st)){ c.stock[erp] = +st; c.hasStock = true; } }
   for (const [erp, , bcs] of c.rows) for (const b of bcs || []){ const k = norm(b); if (!(k in c.bc)) c.bc[k] = erp; }
   return c;
 }
@@ -675,6 +679,20 @@ function resolve(raw){
   return {code:raw, status: CAT ? 'unknown' : 'nocat'};
 }
 const descOf = c => CAT ? (CAT.desc[c] || CAT.desc[CAT.erpN[norm(c)]] || '') : '';
+// Stock del sistema (si el catálogo se importó con columna de stock). Productos del catálogo sin dato = 0.
+const hasStock = () => !!(CAT && CAT.hasStock);
+function stockOf(c){
+  if (!hasStock()) return null;
+  const k = c in CAT.stock ? c : CAT.erpN[norm(c)];
+  if (k != null && k in CAT.stock) return CAT.stock[k];
+  return k != null ? 0 : null;
+}
+function cmpOf(c, counted){
+  const s = stockOf(c); if (s == null) return null;
+  const d = round(counted - s);
+  return {s, d, cls: d === 0 ? 'b-ok' : d < 0 ? 'b-rep' : 'b-blue', txt: d === 0 ? '✔ cuadra' : d < 0 ? `faltan ${fmtN(-d)}` : `sobran ${fmtN(d)}`};
+}
+const cmpHtml = (c, counted) => { const k = cmpOf(c, counted); return k ? ` <span class="badge">Stock ${fmtN(k.s)}</span> <span class="badge ${k.cls}">${k.txt}</span>` : ''; };
 const isUnknown = c => !!CAT && !(norm(c) in CAT.erpN);
 function setMaps(rows){ MAPS = rows || []; EXTRA = Object.create(null); for (const m of MAPS) EXTRA[m.barcode] = m.erp; }
 
@@ -826,7 +844,8 @@ function renderZone(){
   const open = z.status === 'open';
   $('#zTitle').textContent = z.name;
   $('#zBadge').innerHTML = open ? '' : z.status === 'sent' ? `<span class="badge b-ok">✔ Enviada ${fmtT(z.sentAt)}</span>` : '<span class="badge b-rep">⏳ Pendiente de enviar</span>';
-  $('#zStats').textContent = `${z.items.length} productos · ${fmtN(zoneUnits(z))} unidades` + (open ? '' : ' · ya no se puede modificar');
+  $('#zStats').textContent = zoneStats(z) + (open ? '' : ' · ya no se puede modificar');
+  $('#cmpFilter').hidden = !hasStock(); $('#stockNote').hidden = !hasStock();
   $('#zOpen').hidden = !open; $('#undoBtn').hidden = !open; $('#findBtn').hidden = !open;
   $('#zDelete').textContent = open ? 'Eliminar esta zona' : 'Quitar de mi lista';
   $('#zDelete').hidden = z.status === 'pending';
@@ -838,17 +857,29 @@ $('#zSave').addEventListener('click', saveAll);
 function renderItems(flash){
   const z = curZone(); if (!z) return;
   const q = fold($('#search').value.trim()), open = z.status === 'open';
-  const rows = z.items.filter(r => !q || fold(r.c).includes(q) || fold(descOf(r.c)).includes(q));
+  const f = hasStock() ? $('#cmpFilter').value : 'all';
+  const rows = z.items.filter(r => (!q || fold(r.c).includes(q) || fold(descOf(r.c)).includes(q)) &&
+    (f === 'all' || (() => { const k = cmpOf(r.c, r.q); return k && (f === 'ok' ? k.d === 0 : k.d !== 0); })()));
   $('#items').innerHTML = rows.map(r => {
     const unk = isUnknown(r.c);
     return `<div class="it" data-c="${esc(r.c)}"><div class="c">${esc(r.c)} ${r.m ? '<span class="badge b-m">a mano</span>' : ''}${unk ? ' <span class="badge b-bad">no está en catálogo</span>' : ''}</div>
       <div class="q" ${open ? 'data-a="edit" title="Toca para corregir"' : ''}>${fmtN(r.q)}</div>
-      <div class="d">${esc(descOf(r.c)) || '<span class="muted small">' + (r.n > 1 ? r.n + ' lecturas' : '') + '</span>'}</div>
+      <div class="d">${esc(descOf(r.c)) || '<span class="muted small">' + (r.n > 1 ? r.n + ' lecturas' : '') + '</span>'}${cmpHtml(r.c, r.q)}</div>
       ${open ? `<div class="a"><button data-a="dec">−1</button><button data-a="inc">+1</button><button data-a="edit">✎ Cantidad</button><button data-a="del">🗑</button></div>` : ''}</div>`;
   }).join('') || `<div class="empty">${q ? 'Nada coincide con la búsqueda.' : open ? 'Todavía no hay productos. ¡Empieza a escanear!' : 'Zona vacía.'}</div>`;
   if (flash){ const el = $('#items').querySelector(`[data-c="${CSS.escape(flash)}"]`); if (el){ el.classList.add('flash'); if (!camOpen()) el.scrollIntoView({block:'nearest'}); } }
 }
 $('#search').addEventListener('input', () => renderItems());
+$('#cmpFilter').addEventListener('change', () => renderItems());
+function zoneStats(z){
+  let s = `${z.items.length} productos · ${fmtN(zoneUnits(z))} unidades`;
+  if (hasStock()){
+    let ok = 0, dif = 0;
+    for (const it of z.items){ const k = cmpOf(it.c, it.q); if (k) k.d === 0 ? ok++ : dif++; }
+    if (ok + dif) s += ` · ✔ ${ok} cuadran · ⚠ ${dif} con diferencia`;
+  }
+  return s;
+}
 
 function showLast(cls, html){ for (const el of [$('#last'), $('#camLast')]){ el.className = 'last ' + cls; el.innerHTML = html; } }
 function fail(msg){ showLast('err', esc(msg)); beep('err'); }
@@ -869,9 +900,10 @@ function addScan(raw, qty, manual){
   if (manual) it.m = true;
   z.items.unshift(it);
   pushUndo({k:'add', c:code, q:qty, created:!rep, pi:rep ? i : 0});
-  changed(); renderItems(code); $('#zStats').textContent = `${z.items.length} productos · ${fmtN(zoneUnits(z))} unidades`;
-  const add = (qty > 0 ? '+' : '') + fmtN(qty), d = descOf(code);
-  const extra = (d ? `<div class="desc">${esc(d)}</div>` : '') + (r.status === 'map' ? `<div class="via">🔁 Código de proveedor ${esc(raw)} → nuestro código <b>${esc(code)}</b></div>` : '');
+  changed(); renderItems(code); $('#zStats').textContent = zoneStats(z);
+  const add = (qty > 0 ? '+' : '') + fmtN(qty), d = descOf(code), k = cmpOf(code, it.q);
+  const extra = (d ? `<div class="desc">${esc(d)}</div>` : '') + (r.status === 'map' ? `<div class="via">🔁 Código de proveedor ${esc(raw)} → nuestro código <b>${esc(code)}</b></div>` : '') +
+    (k ? `<div class="via">📦 Stock en sistema: <b>${fmtN(k.s)}</b> · contado aquí: <b>${fmtN(it.q)}</b> · <span class="badge ${k.cls}">${k.txt}</span></div>` : '');
   if (rep) showLast('rep', `<span class="big">YA ESTABA ✔ SUMADO</span><br><b class="mono">${esc(code)}</b> → total <b class="big">${fmtN(it.q)}</b> (${add})${extra}`);
   else showLast('new', `<span class="big">NUEVO ✔</span><br><b class="mono">${esc(code)}</b> → <b class="big">${fmtN(it.q)}</b>${extra}`);
   beep(rep ? 'rep' : 'new');
@@ -1017,7 +1049,7 @@ $('#findInput').addEventListener('input', () => {
     const hay = fold(erp + ' ' + d + ' ' + (bcs || []).join(' '));
     if (words.every(w => hay.includes(w))){ out.push([erp, d]); if (out.length >= 40) break; }
   }
-  $('#findRes').innerHTML = out.map(([erp, d]) => `<div class="res" data-erp="${esc(erp)}"><div><div class="c">${esc(erp)}</div><div class="small">${esc(d)}</div></div><span class="badge b-blue">${FIND_FOR_UNK ? 'Es este' : '+ Añadir'}</span></div>`).join('') || '<p class="muted">Ningún producto coincide.</p>';
+  $('#findRes').innerHTML = out.map(([erp, d]) => `<div class="res" data-erp="${esc(erp)}"><div><div class="c">${esc(erp)}</div><div class="small">${esc(d)}${hasStock() ? ` · <b>Stock: ${fmtN(stockOf(erp))}</b>` : ''}</div></div><span class="badge b-blue">${FIND_FOR_UNK ? 'Es este' : '+ Añadir'}</span></div>`).join('') || '<p class="muted">Ningún producto coincide.</p>';
 });
 $('#findRes').addEventListener('click', e => {
   const r = e.target.closest('[data-erp]'); if (!r) return;
@@ -1087,11 +1119,45 @@ $('#delSubs').addEventListener('click', async () => {
   if (error){ alert('No se han podido eliminar: ' + error.message); return; }
   SEL.clear(); loadSubs(); toast('Eliminados');
 });
-function viewSub(s){
-  $('#vdTitle').textContent = `${s.zone} · ${s.user_name}`;
-  $('#vdBody').innerHTML = `<p class="muted small" style="margin-top:0">${fmtDT(Date.parse(s.created_at))} · ${s.line_count} productos · ${fmtN(+s.units)} unidades</p>` +
-    `<div class="items">${s.lines.map(([c, q]) => `<div class="it"><div class="c">${esc(c)}${isUnknown(c) ? ' <span class="badge b-bad">no está en catálogo</span>' : ''}</div><div class="q" style="cursor:default">${fmtN(q)}</div><div class="d">${esc(descOf(c))}</div></div>`).join('')}</div>`;
-  $('#viewDlg').showModal();
+function viewSub(s){ viewLines(`${s.zone} · ${s.user_name}`, `${fmtDT(Date.parse(s.created_at))} · ${s.line_count} productos · ${fmtN(+s.units)} unidades`, s.lines); }
+
+// Comparar lo recibido (sumado) con el stock del sistema
+let CMP = null;
+$('#cmpBtn').addEventListener('click', () => {
+  if (!hasStock()){ alert('El catálogo no tiene stock. Vuelve a importar el Excel de stock eligiendo la columna «Stock actual».'); return; }
+  const list = pickSubs(); if (!list.length){ toast('No hay envíos en la lista'); return; }
+  const agg = new Map();
+  for (const s of list) for (const [c, q] of s.lines) agg.set(c, round((agg.get(c) || 0) + +q));
+  const rows = [];
+  for (const [c, q] of agg){ const s = stockOf(c); rows.push({c, d:descOf(c), q, s, diff: s == null ? null : round(q - s)}); }
+  const counted = new Set([...agg.keys()].map(norm));
+  const missing = [];
+  for (const [erp, d, , st] of CAT.rows) if (+st > 0 && !counted.has(norm(erp))) missing.push({c:erp, d, q:0, s:+st, diff:-(+st), miss:true});
+  CMP = {list, rows, missing};
+  $('#vdTitle').textContent = '📊 Comparación con el stock';
+  const ok = rows.filter(r => r.diff === 0).length, dif = rows.filter(r => r.diff != null && r.diff !== 0).length, unk = rows.filter(r => r.s == null).length;
+  $('#vdBody').innerHTML = `<p class="muted small" style="margin-top:0">${list.length} envío(s) sumados · stock del catálogo del ${fmtDT(CAT.loaded)}</p>
+    <div class="row" style="margin-bottom:10px"><span class="badge b-ok">✔ ${ok} cuadran</span><span class="badge b-rep">⚠ ${dif} con diferencia</span>${unk ? `<span class="badge b-bad">${unk} sin catálogo</span>` : ''}<span class="badge">📦 ${missing.length} con stock y sin contar</span></div>
+    <div class="row" style="margin-bottom:10px"><select id="cmpSel" class="grow"><option value="diff">Contados con diferencia</option><option value="ok">Contados que cuadran</option><option value="miss">Con stock y sin contar (en lo seleccionado)</option><option value="all">Todos los contados</option></select><button class="primary" id="cmpXls">⬇ Excel comparativa</button></div>
+    <p class="muted small">Si solo has seleccionado algunas zonas, «con stock y sin contar» incluye productos que pueden estar en otras zonas.</p>
+    <div id="cmpList"></div>`;
+  $('#cmpSel').addEventListener('change', renderCmp);
+  $('#cmpXls').addEventListener('click', () => {
+    const head = ['Código', 'Descripción', 'Stock sistema', 'Contado', 'Diferencia', 'Situación'];
+    const sit = r => r.miss ? 'Con stock, sin contar' : r.s == null ? 'No está en catálogo' : r.diff === 0 ? 'Cuadra' : r.diff < 0 ? 'Faltan' : 'Sobran';
+    const all = [...CMP.rows, ...CMP.missing].sort((a, b) => (a.diff === 0) - (b.diff === 0) || Math.abs(b.diff ?? 0) - Math.abs(a.diff ?? 0));
+    download(buildXlsx([{name:'Comparativa', generic:true, rows:[head, ...all.map(r => [r.c, r.d, r.s ?? '', r.q, r.diff ?? '', sit(r)])]}]), `Comparativa_stock_${stamp()}.xlsx`, XLSX_T);
+  });
+  renderCmp(); $('#viewDlg').showModal();
+});
+function renderCmp(){
+  const f = $('#cmpSel').value;
+  let v = f === 'miss' ? CMP.missing : CMP.rows.filter(r => f === 'all' || (f === 'ok' ? r.diff === 0 : r.diff !== 0));
+  v = v.slice().sort((a, b) => Math.abs(b.diff ?? 0) - Math.abs(a.diff ?? 0));
+  const shown = v.slice(0, 300);
+  $('#cmpList').innerHTML = `<div class="items">${shown.map(r => `<div class="it"><div class="c">${esc(r.c)}</div><div class="q" style="cursor:default">${fmtN(r.q)}</div>
+    <div class="d">${esc(r.d)} ${r.s == null ? '<span class="badge b-bad">no está en catálogo</span>' : `<span class="badge">Stock ${fmtN(r.s)}</span> <span class="badge ${r.diff === 0 ? 'b-ok' : r.diff < 0 ? 'b-rep' : 'b-blue'}">${r.diff === 0 ? '✔ cuadra' : r.diff < 0 ? 'faltan ' + fmtN(-r.diff) : 'sobran ' + fmtN(r.diff)}</span>`}</div></div>`).join('') || '<div class="empty">Nada en esta lista.</div>'}</div>` +
+    (v.length > shown.length ? `<p class="muted small">Se muestran 300 de ${v.length.toLocaleString('es-ES')}. El Excel los incluye todos.</p>` : '');
 }
 async function dlSubs(list, mode){
   if (!list.length){ toast('No hay envíos en la lista'); return; }
@@ -1157,7 +1223,7 @@ $('#liveList').addEventListener('click', async e => {
 function viewLines(title, sub, lines){
   $('#vdTitle').textContent = title;
   $('#vdBody').innerHTML = `<p class="muted small" style="margin-top:0">${esc(sub)}</p>` +
-    `<div class="items">${lines.map(([c, q]) => `<div class="it"><div class="c">${esc(c)}${isUnknown(c) ? ' <span class="badge b-bad">no está en catálogo</span>' : ''}</div><div class="q" style="cursor:default">${fmtN(q)}</div><div class="d">${esc(descOf(c))}</div></div>`).join('') || '<div class="empty">Sin productos todavía.</div>'}</div>`;
+    `<div class="items">${lines.map(([c, q]) => `<div class="it"><div class="c">${esc(c)}${isUnknown(c) ? ' <span class="badge b-bad">no está en catálogo</span>' : ''}</div><div class="q" style="cursor:default">${fmtN(q)}</div><div class="d">${esc(descOf(c))}${cmpHtml(c, +q)}</div></div>`).join('') || '<div class="empty">Sin productos todavía.</div>'}</div>`;
   $('#viewDlg').showModal();
 }
 
@@ -1165,7 +1231,7 @@ function viewLines(title, sub, lines){
 function renderCat(){
   if (!$('#catStatus')) return;
   $('#catStatus').innerHTML = CAT
-    ? `<div class="kv"><b>Productos</b><span><b style="color:var(--text)">${CAT.rows.length.toLocaleString('es-ES')}</b></span><b>Códigos de proveedor</b><span>${Object.keys(CAT.bc).length.toLocaleString('es-ES')} + ${MAPS.length} asignados a mano</span><b>Archivo</b><span>${esc(CAT.name)}</span><b>Actualizado</b><span>${fmtDT(CAT.loaded)}${CAT.by ? ' por ' + esc(CAT.by) : ''}</span></div>`
+    ? `<div class="kv"><b>Productos</b><span><b style="color:var(--text)">${CAT.rows.length.toLocaleString('es-ES')}</b></span><b>Códigos de proveedor</b><span>${Object.keys(CAT.bc).length.toLocaleString('es-ES')} + ${MAPS.length} asignados a mano</span><b>Stock</b><span>${hasStock() ? '✔ incluido: los vendedores ven el stock y las diferencias' : '✖ no incluido (vuelve a importar eligiendo la columna «Stock actual»)'}</span><b>Archivo</b><span>${esc(CAT.name)}</span><b>Actualizado</b><span>${fmtDT(CAT.loaded)}${CAT.by ? ' por ' + esc(CAT.by) : ''}</span></div>`
     : '<b>Todavía no hay catálogo.</b> Pulsa «Importar Excel de stock». Mientras no haya catálogo, los empleados pueden escanear cualquier código.';
   $('#optText').checked = OPTS.codeText; $('#optZero').checked = OPTS.skipZero;
 }
@@ -1176,8 +1242,9 @@ $('#testCode').addEventListener('keydown', e => { if (e.key === 'Enter'){ e.prev
 function testCode(){
   const v = $('#testCode').value.trim(); if (!v) return;
   const r = resolve(v), el = $('#testRes'); el.hidden = false;
-  if (r.status === 'erp'){ el.className = 'last new'; el.innerHTML = `✔ Es nuestro código <b class="mono">${esc(r.code)}</b><div class="desc">${esc(descOf(r.code))}</div>`; }
-  else if (r.status === 'map'){ el.className = 'last new'; el.innerHTML = `🔁 Código de proveedor → se apuntará como <b class="mono">${esc(r.code)}</b><div class="desc">${esc(descOf(r.code))}</div>`; }
+  const st = r.status !== 'unknown' && r.status !== 'nocat' && hasStock() ? `<div class="via">📦 Stock en sistema: <b>${fmtN(stockOf(r.code))}</b></div>` : '';
+  if (r.status === 'erp'){ el.className = 'last new'; el.innerHTML = `✔ Es nuestro código <b class="mono">${esc(r.code)}</b><div class="desc">${esc(descOf(r.code))}</div>${st}`; }
+  else if (r.status === 'map'){ el.className = 'last new'; el.innerHTML = `🔁 Código de proveedor → se apuntará como <b class="mono">${esc(r.code)}</b><div class="desc">${esc(descOf(r.code))}</div>${st}`; }
   else if (r.status === 'nocat'){ el.className = 'last'; el.textContent = 'No hay catálogo cargado.'; }
   else { el.className = 'last err'; el.innerHTML = `⚠ <b class="mono">${esc(v)}</b> no está en el catálogo: al escanearlo saldrá como error.`; }
   $('#testCode').select();
@@ -1298,22 +1365,26 @@ async function loadMapSheet(i){
   $('#mapBc').innerHTML = Array.from({length:nc}, (_, c) => `<label><input type="checkbox" value="${c}" ${bcCols.includes(c) ? 'checked' : ''}> ${colL(c)}${head[c] ? ' · ' + esc(head[c].slice(0, 18)) : ''}</label>`).join('');
   const dc = Array.from({length:nc}, (_, c) => c).find(c => c > 0 && !bcCols.includes(c) && share(c, /[a-záéíóúñ]{3,}.*\s/i) > .5);
   $('#mapDesc').value = dc != null ? String(dc) : '-1';
+  $('#mapStock').innerHTML = '<option value="-1">— no incluir stock —</option>' + opts;
+  const stc = head.findIndex((x, c) => c > 0 && /stock|exist|disponib|^uds|unidades|cantidad/i.test(x));
+  $('#mapStock').value = stc >= 0 ? String(stc) : '-1';
   $('#mapHeader').checked = head.some(x => /c[oó]d|ref|art[ií]c|descrip|ean|barra|nombre|prove/i.test(x));
   $('#mapPreview').innerHTML = `<tr><th></th>${Array.from({length:nc}, (_, c) => `<th>${colL(c)}</th>`).join('')}</tr>` +
     rows.slice(0, 8).map((r, ri) => `<tr><td class="muted">${ri + 1}</td>${Array.from({length:nc}, (_, c) => `<td>${esc(r[c] || '')}</td>`).join('')}</tr>`).join('');
   $('#mapInfo').textContent = `${rows.length.toLocaleString('es-ES')} filas. Si un producto tiene varios códigos de proveedor, pueden estar en varias filas, en varias columnas o separados por comas.`;
 }
 $('#mapGo').addEventListener('click', async () => {
-  const ec = +$('#mapErp').value, dc = +$('#mapDesc').value;
-  const bcs = [...$('#mapBc').querySelectorAll('input:checked')].map(x => +x.value).filter(c => c !== ec);
+  const ec = +$('#mapErp').value, dc = +$('#mapDesc').value, sc = +$('#mapStock').value;
+  const bcs = [...$('#mapBc').querySelectorAll('input:checked')].map(x => +x.value).filter(c => c !== ec && c !== sc);
   if (!bcs.length && !confirm('No has marcado ninguna columna de código de barras de proveedor. Solo se reconocerán nuestros códigos. ¿Continuar?')) return;
   const src = $('#mapHeader').checked ? MAP.rows.slice(1) : MAP.rows;
   const byErp = new Map();
   for (const r of src){
     const erp = (r[ec] || '').trim(); if (!erp) continue;
     let e = byErp.get(erp);
-    if (!e){ e = [erp, dc >= 0 ? (r[dc] || '') : '', []]; byErp.set(erp, e); }
+    if (!e){ e = [erp, dc >= 0 ? (r[dc] || '') : '', []]; if (sc >= 0) e[3] = null; byErp.set(erp, e); }
     else if (!e[1] && dc >= 0) e[1] = r[dc] || '';
+    if (sc >= 0 && e[3] == null){ const s = parseQty(r[sc] || ''); if (isFinite(s)) e[3] = round(s); }
     for (const c of bcs) for (const b of String(r[c] || '').split(/[,;|\s]+/)) if (b && b !== erp && !e[2].includes(b)) e[2].push(b);
   }
   if (!byErp.size){ alert('No hay ningún código ERP en la columna elegida.'); return; }
@@ -1464,6 +1535,18 @@ function sheetXml(rows){
   });
   return x + '</sheetData></worksheet>';
 }
+// Hoja con cabecera y varias columnas (texto o número), para informes como la comparativa
+function sheetXmlGeneric(rows){
+  const col = i => { let s = ''; i++; while (i > 0){ const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; };
+  let x = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols><col min="1" max="1" width="20" customWidth="1"/><col min="2" max="2" width="50" customWidth="1"/><col min="3" max="6" width="16" customWidth="1"/></cols><sheetData>';
+  rows.forEach((r, i) => {
+    x += `<row r="${i + 1}">` + r.map((v, j) => {
+      const ref = col(j) + (i + 1);
+      return (typeof v === 'number' && isFinite(v)) ? `<c r="${ref}"><v>${v}</v></c>` : `<c r="${ref}" t="inlineStr"><is><t>${xe(v ?? '')}</t></is></c>`;
+    }).join('') + '</row>';
+  });
+  return x + '</sheetData></worksheet>';
+}
 function buildXlsx(sheets){
   const H = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n', names = sheetNames(sheets.map(s => s.name));
   return zipBytes([
@@ -1472,7 +1555,7 @@ function buildXlsx(sheets){
     {name:'xl/workbook.xml', data: H + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' + names.map((n, i) => `<sheet name="${xe(n)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>`).join('') + '</sheets></workbook>'},
     {name:'xl/_rels/workbook.xml.rels', data: H + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' + sheets.map((s, i) => `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>`).join('') + `<Relationship Id="rId${sheets.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`},
     {name:'xl/styles.xml', data: H + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'},
-    ...sheets.map((s, i) => ({name:`xl/worksheets/sheet${i + 1}.xml`, data:sheetXml(s.rows)}))
+    ...sheets.map((s, i) => ({name:`xl/worksheets/sheet${i + 1}.xml`, data:s.generic ? sheetXmlGeneric(s.rows) : sheetXml(s.rows)}))
   ]);
 }
 const XLSX_T = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
