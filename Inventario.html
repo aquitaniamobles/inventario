@@ -156,6 +156,8 @@ dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8
 /* ---------- Cámara ---------- */
 #cam{position:fixed;inset:0;z-index:100;background:#000;display:flex;flex-direction:column;color:#fff}
 #cam > *{min-width:0}
+.storehead{font-weight:800;font-size:16px;margin:16px 0 8px;padding-bottom:4px;border-bottom:2px solid var(--line)}
+.storeSel{max-width:100%}
 /* ---------- Etiquetas ---------- */
 .lblbtn{background:linear-gradient(135deg,#f2a93b,#e08a12);color:#14212f;border:0;margin-bottom:16px;box-shadow:0 6px 16px rgba(224,138,18,.3)}
 .lblbtn .badge{background:#14212f;color:#fff;margin-left:6px}
@@ -252,6 +254,7 @@ dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8
     <div class="brand"><img src="icon-192.png" alt=""><span>Inventario</span></div>
     <div class="pill" id="syncPill">…</div>
     <div class="sp"></div>
+    <span class="pill" id="storePill" hidden></span>
     <button id="userBtn">👤 <span id="userName"></span></button>
   </header>
   <nav class="tabs" id="tabs" hidden>
@@ -372,6 +375,7 @@ dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8
     <section id="liveView" hidden>
       <h2>Zonas en curso</h2>
       <p class="muted small" style="margin-top:-6px">Lo que cada persona está contando ahora mismo. Se guarda solo en el servidor unos segundos después de cada escaneo, así que si un móvil se pierde o falla, aquí está la última copia. Al entrar con el mismo usuario en otro dispositivo, sus zonas se recuperan solas.</p>
+      <select id="liveStore" class="storeSel" style="margin-bottom:10px"><option value="">🏬 Todas las tiendas</option></select>
       <div id="liveList"></div>
     </section>
 
@@ -380,6 +384,7 @@ dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8
       <h2>Excels recibidos</h2>
       <p class="muted small" style="margin-top:-6px">Cada vez que alguien pulsa «Terminar y enviar» en una zona, aparece aquí al momento.</p>
       <div class="row" style="margin-bottom:6px">
+        <select id="subsStore" class="storeSel"><option value="">🏬 Todas las tiendas</option></select>
         <select id="subsRange"><option value="1">Hoy</option><option value="7" selected>Últimos 7 días</option><option value="31">Últimos 30 días</option><option value="0">Todos</option></select>
         <input id="subsSearch" class="grow" placeholder="🔍 Zona o persona" autocomplete="off">
       </div>
@@ -388,6 +393,7 @@ dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8
         <button id="dlSheets" class="primary">⬇ Excel (una hoja por zona)</button>
         <button id="dlZip">⬇ ZIP (un Excel por zona)</button>
         <button id="dlCons">⬇ Consolidado (todo sumado)</button>
+        <button id="dlStores">⬇ Consolidado por tienda</button>
         <button id="cmpBtn">📊 Comparar con stock</button>
         <button id="delSubs" class="danger">🗑 Eliminar</button>
       </div>
@@ -421,9 +427,15 @@ dialog .df{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8
           <div><label for="nuUser">Usuario (para entrar)</label><input id="nuUser" placeholder="p. ej. ana" autocapitalize="none" spellcheck="false" autocomplete="off"></div>
           <div><label for="nuPin">PIN (6 números)</label><input id="nuPin" inputmode="numeric" maxlength="6" placeholder="p. ej. 482915" autocomplete="off"></div>
           <div><label for="nuRole">Tipo</label><select id="nuRole"><option value="empleado">Empleado (solo contar)</option><option value="admin">Administrador</option></select></div>
+          <div><label for="nuStore">Tienda</label><select id="nuStore" class="storeSel"></select></div>
         </div>
         <div class="row" style="margin-top:12px"><button class="primary">+ Crear usuario</button><button type="button" class="link" id="genPin">Generar PIN</button><span class="err" id="nuErr" style="margin:0"></span></div>
       </form>
+      <h3>🏬 Tiendas</h3>
+      <div class="card">
+        <div id="storeList"></div>
+        <form class="row" id="newStoreForm" style="margin-top:10px"><input id="nsName" class="grow" placeholder="Nombre de la tienda (ej.: Tienda Centro)" autocomplete="off"><button class="primary">+ Añadir tienda</button></form>
+      </div>
       <h3>Usuarios creados</h3>
       <div id="userList"></div>
     </section>
@@ -638,7 +650,7 @@ async function boot(){
   if (session){
     const cached = (() => { try{ return JSON.parse(localStorage.getItem('inv.me')); }catch(e){ return null; } })();
     try{
-      const {data, error} = await SB.from('inv_profiles').select('id, username, display_name, role, active').eq('id', session.user.id).maybeSingle();
+      const {data, error} = await SB.from('inv_profiles').select('id, username, display_name, role, active, store_id').eq('id', session.user.id).maybeSingle();
       if (error) throw error;
       if (!data || !data.active){ await SB.auth.signOut(); showAuth('Tu usuario está desactivado. Habla con el administrador.'); return; }
       ME = data; localStorage.setItem('inv.me', JSON.stringify(ME));
@@ -740,7 +752,7 @@ async function syncZones(){
       else {
         const z = L.zones.find(x => x.id === id);
         if (!z){ delete L.sync[id]; continue; }
-        r = await SB.from('inv_zones_live').upsert({id:z.id, user_id:ME.id, user_name:ME.display_name, zone:z.name, status:z.status,
+        r = await SB.from('inv_zones_live').upsert({id:z.id, user_id:ME.id, user_name:ME.display_name, store_id:ME.store_id || null, store_name:myStoreName(), zone:z.name, status:z.status,
           items:z.items, line_count:z.items.length, units:zoneUnits(z), created_at:new Date(z.created).toISOString(), updated_at:new Date().toISOString()});
       }
       if (r.error) throw r.error;
@@ -920,6 +932,7 @@ let RT = null;
 async function startApp(){
   $('#authView').hidden = true; $('#appView').hidden = false;
   $('#userName').textContent = ME.display_name;
+  loadStores();
   $('#tabs').hidden = !isAdmin();
   loadLocal();
   await loadCatalogCache();
@@ -933,6 +946,7 @@ async function startApp(){
       .on('postgres_changes', {event:'*', schema:'public', table:'inv_submissions'}, () => { if (isAdmin()) loadSubs(); loadHistory(); })
       .on('postgres_changes', {event:'*', schema:'public', table:'inv_zones_live'}, () => { if (isAdmin()){ clearTimeout(liveTimer); liveTimer = setTimeout(loadLive, 1200); } })
       .on('postgres_changes', {event:'*', schema:'public', table:'inv_label_tasks'}, () => { clearTimeout(taskTimer); taskTimer = setTimeout(loadTasks, 800); })
+      .on('postgres_changes', {event:'*', schema:'public', table:'inv_stores'}, () => loadStores())
       .on('postgres_changes', {event:'*', schema:'public', table:'inv_label_done'}, () => { clearTimeout(taskTimer); taskTimer = setTimeout(loadTasks, 800); })
       .subscribe(st => { if (st === 'SUBSCRIBED'){ online = true; renderSync(); } });
   }
@@ -1249,7 +1263,7 @@ $('#fdSend').addEventListener('click', () => {
   $('#finishDlg').close();
   const unk = z.items.filter(it => isUnknown(it.c)).length;
   const lines = z.items.slice().sort((a, b) => a.c.localeCompare(b.c, 'es', {numeric:true})).map(it => [it.c, it.q]);
-  const p = {client_id:z.id, user_id:ME.id, user_name:ME.display_name, zone:z.name, lines, line_count:lines.length, units:zoneUnits(z), unknown_count:unk};
+  const p = {client_id:z.id, user_id:ME.id, user_name:ME.display_name, store_id:ME.store_id || null, store_name:myStoreName(), zone:z.name, lines, line_count:lines.length, units:zoneUnits(z), unknown_count:unk};
   z.status = 'pending'; L.outbox.push({t:'sub', p}); changed();
   renderZone(); showTab('count'); flushOutbox();
   toast(navigator.onLine ? 'Enviando…' : '⏳ Sin conexión: se enviará sola cuando vuelva internet', 4000);
@@ -1259,7 +1273,7 @@ $('#fdSend').addEventListener('click', () => {
 let SUBS = [], SEL = new Set();
 async function loadSubs(){
   try{
-    const {data, error} = await SB.from('inv_submissions').select('id, user_name, zone, lines, line_count, units, unknown_count, created_at, downloaded_at').order('created_at', {ascending:false}).limit(1000);
+    const {data, error} = await SB.from('inv_submissions').select('id, user_name, store_id, store_name, zone, lines, line_count, units, unknown_count, created_at, downloaded_at').order('created_at', {ascending:false}).limit(1000);
     if (error) throw error;
     SUBS = data; renderSubs();
   }catch(e){ console.warn('loadSubs', e); }
@@ -1267,7 +1281,8 @@ async function loadSubs(){
 function visibleSubs(){
   const days = +$('#subsRange').value, q = fold($('#subsSearch').value.trim());
   const from = days ? (() => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (days - 1)); return d.getTime(); })() : 0;
-  return SUBS.filter(s => Date.parse(s.created_at) >= from && (!q || fold(s.zone + ' ' + s.user_name).includes(q)));
+  const st = $('#subsStore').value;
+  return SUBS.filter(s => Date.parse(s.created_at) >= from && (!q || fold(s.zone + ' ' + s.user_name + ' ' + (s.store_name || '')).includes(q)) && storeMatch(s, st));
 }
 function renderSubs(){
   const nNew = SUBS.filter(s => !s.downloaded_at).length;
@@ -1276,11 +1291,16 @@ function renderSubs(){
   const v = visibleSubs();
   for (const id of [...SEL]) if (!v.some(s => s.id === id)) SEL.delete(id);
   $('#subsInfo').textContent = `${v.length} envíos · ${SEL.size} seleccionados` + (SEL.size ? '' : ' (si no seleccionas ninguno, se descargan todos los de la lista)');
-  $('#subsList').innerHTML = v.map(s => `<div class="subcard"><input type="checkbox" data-sel="${s.id}" ${SEL.has(s.id) ? 'checked' : ''}>
+  const card = s => `<div class="subcard"><input type="checkbox" data-sel="${s.id}" ${SEL.has(s.id) ? 'checked' : ''}>
     <div><div class="t">${esc(s.zone)} ${s.downloaded_at ? '' : '<span class="badge b-blue">nuevo</span>'} ${s.unknown_count ? `<span class="badge b-bad">⚠ ${s.unknown_count} sin catálogo</span>` : ''}</div>
     <div class="m">👤 ${esc(s.user_name)} · ${fmtDT(Date.parse(s.created_at))} · ${s.line_count} productos · ${fmtN(+s.units)} uds</div></div>
-    <div class="a"><button data-view="${s.id}">Ver</button><button data-dl="${s.id}" class="primary">⬇ Excel</button></div></div>`).join('') || '<div class="empty">No hay envíos en este periodo.</div>';
+    <div class="a"><button data-view="${s.id}">Ver</button><button data-dl="${s.id}" class="primary">⬇ Excel</button></div></div>`;
+  $('#subsList').innerHTML = byStore(v).map(([name, list]) =>
+    `<div class="storehead">🏬 ${esc(name)} <span class="muted small">· ${list.length} envío${list.length > 1 ? 's' : ''} · ${fmtN(list.reduce((a, s) => a + +s.units, 0))} uds</span></div>` + list.map(card).join('')
+  ).join('') || '<div class="empty">No hay envíos en este periodo.</div>';
 }
+$('#subsStore').addEventListener('change', renderSubs);
+$('#dlStores').addEventListener('click', () => dlSubs(pickSubs(), 'stores'));
 $('#subsRange').addEventListener('change', renderSubs);
 $('#subsSearch').addEventListener('input', renderSubs);
 $('#subsList').addEventListener('change', e => { const c = e.target.closest('[data-sel]'); if (!c) return; c.checked ? SEL.add(c.dataset.sel) : SEL.delete(c.dataset.sel); renderSubs(); });
@@ -1347,13 +1367,22 @@ async function dlSubs(list, mode){
   const unk = list.reduce((a, s) => a + (s.unknown_count || 0), 0);
   if (unk && !confirm(`⚠ Hay ${unk} líneas con códigos que no están en el catálogo. Administración puede no aceptarlas.\n\n¿Descargar igualmente?`)) return;
   const st = stamp(), rowsOf = s => s.lines.filter(([, q]) => !(OPTS.skipZero && +q === 0));
+  if (mode === 'stores'){
+    // Una hoja por tienda, con todo lo de esa tienda sumado
+    const sheets = byStore(list).map(([name, ls]) => {
+      const agg = new Map();
+      for (const s of ls) for (const [c, q] of s.lines) agg.set(c, round((agg.get(c) || 0) + +q));
+      return {name, rows:[...agg.entries()].filter(([, q]) => !(OPTS.skipZero && q === 0)).sort((a, b) => a[0].localeCompare(b[0], 'es', {numeric:true}))};
+    });
+    download(buildXlsx(sheets), `Inventario_por_tienda_${st}.xlsx`, XLSX_T);
+  }
   if (mode === 'one'){ const s = list[0]; download(buildXlsx([{name:s.zone, rows:rowsOf(s)}]), `Inventario_${safe(s.zone)}_${safe(s.user_name)}_${st}.xlsx`, XLSX_T); }
   else if (mode === 'sheets') download(buildXlsx(list.map(s => ({name:`${s.zone} - ${s.user_name}`, rows:rowsOf(s)}))), `Inventario_por_zonas_${st}.xlsx`, XLSX_T);
   else if (mode === 'zip'){
     const used = new Set();
     const files = list.map(s => { let n = `Inventario_${safe(s.zone)}_${safe(s.user_name)}.xlsx`, i = 2; while (used.has(n.toLowerCase())) n = `Inventario_${safe(s.zone)}_${safe(s.user_name)}_${i++}.xlsx`; used.add(n.toLowerCase()); return {name:n, data:buildXlsx([{name:s.zone, rows:rowsOf(s)}])}; });
     download(zipBytes(files), `Inventario_zonas_${st}.zip`, 'application/zip');
-  } else {
+  } else if (mode === 'cons'){
     const agg = new Map();
     for (const s of list) for (const [c, q] of s.lines) agg.set(c, round((agg.get(c) || 0) + +q));
     const rows = [...agg.entries()].filter(([, q]) => !(OPTS.skipZero && q === 0)).sort((a, b) => a[0].localeCompare(b[0], 'es', {numeric:true}));
@@ -1367,7 +1396,7 @@ async function dlSubs(list, mode){
 let LIVE = [], liveTimer = null;
 async function loadLive(){
   try{
-    const {data, error} = await SB.from('inv_zones_live').select('id, user_name, zone, status, items, line_count, units, created_at, updated_at').neq('status', 'sent').order('updated_at', {ascending:false});
+    const {data, error} = await SB.from('inv_zones_live').select('id, user_name, store_id, store_name, zone, status, items, line_count, units, created_at, updated_at').neq('status', 'sent').order('updated_at', {ascending:false});
     if (error) throw error;
     LIVE = data; renderLive();
   }catch(e){ console.warn('loadLive', e); }
@@ -1382,13 +1411,17 @@ function ago(t){
 function renderLive(){
   $('#liveBadge').hidden = !LIVE.length; $('#liveBadge').textContent = LIVE.length;
   if (TAB !== 'live') return;
-  $('#liveList').innerHTML = LIVE.map(z => {
+  const card = z => {
     const t = Date.parse(z.updated_at), quiet = now() - t > 30 * 60000;
     return `<div class="subcard" style="grid-template-columns:1fr auto"><div><div class="t">${esc(z.zone)} ${z.status === 'pending' ? '<span class="badge b-rep">Terminada, enviándose</span>' : '<span class="badge b-blue">Contando</span>'} ${quiet ? '<span class="badge">sin cambios desde hace rato</span>' : ''}</div>
       <div class="m">👤 ${esc(z.user_name)} · guardada ${ago(t)} · ${z.line_count} productos · ${fmtN(+z.units)} uds</div></div>
       <div class="a"><button data-lview="${esc(z.id)}">Ver</button><button data-ldl="${esc(z.id)}">⬇ Copia Excel</button><button class="danger" data-ldel="${esc(z.id)}">🗑</button></div></div>`;
-  }).join('') || '<div class="empty">Ahora mismo nadie tiene zonas a medias.</div>';
+  };
+  const v = LIVE.filter(z => storeMatch(z, $('#liveStore').value));
+  $('#liveList').innerHTML = byStore(v).map(([name, list]) => `<div class="storehead">🏬 ${esc(name)} <span class="muted small">· ${list.length} zona${list.length > 1 ? 's' : ''}</span></div>` + list.map(card).join('')).join('')
+    || '<div class="empty">Ahora mismo nadie tiene zonas a medias.</div>';
 }
+$('#liveStore').addEventListener('change', renderLive);
 $('#liveList').addEventListener('click', async e => {
   const v = e.target.closest('[data-lview]'), d = e.target.closest('[data-ldl]'), x = e.target.closest('[data-ldel]');
   const id = (v || d || x) && (v || d || x).dataset[v ? 'lview' : d ? 'ldl' : 'ldel'];
@@ -1640,21 +1673,25 @@ async function loadUsers(){
   catch(e){ $('#userList').innerHTML = `<div class="notice bad">${esc(e.message)}</div>`; }
 }
 function renderUsers(){
-  $('#userList').innerHTML = USERS.map(u => `<div class="urow" data-u="${u.id}"><div class="grow"><b>${esc(u.display_name)}</b> ${u.role === 'admin' ? '<span class="badge b-blue">Admin</span>' : '<span class="badge">Empleado</span>'} ${u.active ? '' : '<span class="badge b-bad">Desactivado</span>'}
-    <div class="small muted">Usuario: <b class="mono">${esc(u.username)}</b> · ${u.last_sign_in_at ? 'última entrada ' + fmtDT(Date.parse(u.last_sign_in_at)) : 'nunca ha entrado'}</div></div>
+  renderStoresAdmin();
+  const opts = sel => `<option value="">— Sin tienda —</option>` + STORES.map(s => `<option value="${s.id}" ${s.id === sel ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+  $('#userList').innerHTML = USERS.map(u => `<div class="urow" data-u="${u.id}"><div class="grow"><b>${esc(u.display_name)}</b> ${u.role === 'admin' ? '<span class="badge b-blue">Admin</span>' : '<span class="badge">Empleado</span>'} ${u.active ? '' : '<span class="badge b-bad">Desactivado</span>'} ${u.store_id ? '' : '<span class="badge b-rep">sin tienda</span>'}
+    <div class="small muted">Usuario: <b class="mono">${esc(u.username)}</b> · ${u.last_sign_in_at ? 'última entrada ' + fmtDT(Date.parse(u.last_sign_in_at)) : 'nunca ha entrado'}</div>
+    <label class="small">🏬 <select data-ustore>${opts(u.store_id)}</select></label></div>
     ${u.id === ME.id ? '<span class="small muted">(tú)</span><button data-ua="pin">Cambiar PIN</button>' : `<button data-ua="pin">Cambiar PIN</button><button data-ua="role">${u.role === 'admin' ? 'Hacer empleado' : 'Hacer admin'}</button><button data-ua="active">${u.active ? 'Desactivar' : 'Activar'}</button><button data-ua="del" class="danger">Eliminar</button>`}</div>`).join('') || '<p class="muted">No hay usuarios.</p>';
 }
 const genPin = () => String(Math.floor(100000 + Math.random() * 900000));
 $('#genPin').addEventListener('click', () => { $('#nuPin').value = genPin(); });
 $('#newUserForm').addEventListener('submit', async e => {
   e.preventDefault();
-  const name = $('#nuName').value.trim(), username = normUser($('#nuUser').value), pin = $('#nuPin').value.trim(), role = $('#nuRole').value;
+  const name = $('#nuName').value.trim(), username = normUser($('#nuUser').value), pin = $('#nuPin').value.trim(), role = $('#nuRole').value, store_id = $('#nuStore').value || null;
+  if (!store_id && role !== 'admin' && STORES.length && !confirm('No has elegido tienda para este usuario. ¿Crearlo sin tienda?')) return;
   if (!name || username.length < 2){ $('#nuErr').textContent = 'Escribe el nombre y el usuario.'; return; }
   if (!/^\d{6}$/.test(pin)){ $('#nuErr').textContent = 'El PIN debe tener 6 números.'; return; }
   $('#nuErr').textContent = '';
   try{
-    await fnCall({action:'create', name, username, pin, role});
-    alert(`✔ Usuario creado.\n\nNombre: ${name}\nUsuario: ${username}\nPIN: ${pin}\n\nDáselo a la persona. Entrará en https://aquitaniamobles.github.io/inventario/ y se quedará conectada en su móvil.`);
+    await fnCall({action:'create', name, username, pin, role, store_id});
+    alert(`✔ Usuario creado.\n\nNombre: ${name}\nUsuario: ${username}\nPIN: ${pin}\nTienda: ${storeName(store_id)}\n\nDáselo a la persona. Entrará en https://aquitaniamobles.github.io/inventario/ y se quedará conectada en su móvil.`);
     $('#newUserForm').reset(); loadUsers();
   }catch(err){ $('#nuErr').textContent = err.message; }
 });
@@ -1678,6 +1715,70 @@ $('#userList').addEventListener('click', async e => {
     }
     loadUsers();
   }catch(err){ alert(err.message); }
+});
+
+$('#userList').addEventListener('change', async e => {
+  const s = e.target.closest('[data-ustore]'); if (!s) return;
+  const u = USERS.find(x => x.id === s.closest('[data-u]').dataset.u); if (!u) return;
+  try{ await fnCall({action:'set_store', id:u.id, store_id:s.value || null}); u.store_id = s.value || null; toast(`🏬 ${u.display_name} → ${storeName(u.store_id)}`); renderUsers(); }
+  catch(err){ alert(err.message); loadUsers(); }
+});
+
+/* ================= Tiendas ================= */
+let STORES = (() => { try{ return JSON.parse(localStorage.getItem('inv.stores')) || []; }catch(e){ return []; } })();
+const storeName = id => (STORES.find(s => s.id === id) || {}).name || 'Sin tienda';
+const myStoreName = () => ME && ME.store_id ? storeName(ME.store_id) : null;
+// filtro: '' = todas, '-' = sin tienda, o el id de la tienda
+const storeMatch = (x, st) => !st || (st === '-' ? !x.store_id : x.store_id === st);
+// Agrupa una lista por tienda, en el orden de las tiendas y «Sin tienda» al final
+function byStore(list){
+  const m = new Map();
+  for (const x of list){ const s = STORES.find(t => t.id === x.store_id); const k = s ? s.name : (x.store_name || 'Sin tienda'); if (!m.has(k)) m.set(k, []); m.get(k).push(x); }
+  const order = STORES.map(s => s.name);
+  return [...m.entries()].sort((a, b) => (order.indexOf(a[0]) + 1 || 999) - (order.indexOf(b[0]) + 1 || 999) || a[0].localeCompare(b[0]));
+}
+async function loadStores(){
+  try{
+    const {data, error} = await SB.from('inv_stores').select('id, name').order('name');
+    if (error) throw error;
+    STORES = data; try{ localStorage.setItem('inv.stores', JSON.stringify(STORES)); }catch(e){}
+  }catch(e){ console.warn('loadStores', e); }
+  renderStorePickers();
+}
+function renderStorePickers(){
+  const pill = $('#storePill'); pill.hidden = !(ME && ME.store_id); pill.textContent = '🏬 ' + (myStoreName() || '');
+  const opts = STORES.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+  for (const id of ['subsStore', 'liveStore']){ const el = $('#' + id); const v = el.value; el.innerHTML = '<option value="">🏬 Todas las tiendas</option>' + opts + '<option value="-">Sin tienda</option>'; el.value = v; }
+  const nu = $('#nuStore'), v = nu.value; nu.innerHTML = '<option value="">— Sin tienda —</option>' + opts; nu.value = v;
+  if (TAB === 'users'){ if (USERS.length) renderUsers(); else renderStoresAdmin(); }
+  if (TAB === 'subs') renderSubs();
+  if (TAB === 'live') renderLive();
+}
+function renderStoresAdmin(){
+  const count = id => USERS.filter(u => u.store_id === id).length;
+  $('#storeList').innerHTML = STORES.map(s => `<div class="urow" data-store="${s.id}" style="margin-bottom:6px"><div class="grow"><b>🏬 ${esc(s.name)}</b> <span class="small muted">· ${count(s.id)} usuario${count(s.id) === 1 ? '' : 's'}</span></div><button data-sa="ren">Renombrar</button><button class="danger" data-sa="del">Eliminar</button></div>`).join('')
+    || '<p class="muted" style="margin:0">Todavía no hay tiendas. Añade las tuyas aquí abajo y luego asigna cada usuario a su tienda.</p>';
+}
+$('#newStoreForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const name = $('#nsName').value.trim(); if (!name) return;
+  const {error} = await SB.from('inv_stores').insert({name});
+  if (error){ alert(/duplicate|unique/i.test(error.message) ? 'Ya existe una tienda con ese nombre.' : error.message); return; }
+  $('#nsName').value = ''; toast(`🏬 Tienda «${name}» creada`); loadStores();
+});
+$('#storeList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-sa]'); if (!b) return;
+  const s = STORES.find(x => x.id === b.closest('[data-store]').dataset.store); if (!s) return;
+  if (b.dataset.sa === 'ren'){
+    const n = prompt('Nuevo nombre de la tienda:', s.name); if (!n || !n.trim() || n.trim() === s.name) return;
+    const {error} = await SB.from('inv_stores').update({name:n.trim()}).eq('id', s.id);
+    if (error){ alert(error.message); return; }
+  } else {
+    if (!confirm(`¿Eliminar la tienda «${s.name}»? Sus usuarios quedarán «sin tienda». Los envíos ya recibidos conservan el nombre.`)) return;
+    const {error} = await SB.from('inv_stores').delete().eq('id', s.id);
+    if (error){ alert(error.message); return; }
+  }
+  await loadStores(); loadUsers();
 });
 
 /* ================= ADMIN: códigos asignados ================= */
@@ -2011,7 +2112,7 @@ let TASKS = [], DONE = new Map(), TASK = null, taskTimer = null;
 async function loadTasks(){
   if (!ME) return;
   try{
-    const {data, error} = await SB.from('inv_label_tasks').select('id, kind, name, assigned, items, item_count, with_price, created_by_name, created_at').eq('archived', false).order('created_at', {ascending:false});
+    const {data, error} = await SB.from('inv_label_tasks').select('id, kind, name, assigned, stores, items, item_count, with_price, created_by_name, created_at').eq('archived', false).order('created_at', {ascending:false});
     if (error) throw error;
     TASKS = data;
     DONE = new Map(data.map(t => [t.id, new Map()]));
@@ -2035,7 +2136,9 @@ function renderTasks(){
   $('#goLabelsBadge').hidden = !mine.length; $('#goLabelsBadge').textContent = `${mine.length} tarea${mine.length > 1 ? 's' : ''}`;
   $('#taskList').innerHTML = TASKS.map(t => {
     const d = taskDoneCount(t), pct = t.item_count ? Math.round(d * 100 / t.item_count) : 100;
-    const who = !t.assigned.length ? 'Para todos' : (isAdmin() && USERS.length ? t.assigned.map(id => (USERS.find(u => u.id === id) || {}).display_name || '¿?').join(', ') : 'Asignada a ti');
+    const st = t.stores || [];
+    const who = !t.assigned.length && !st.length ? 'Para todos'
+      : [...st.map(id => '🏬 ' + storeName(id)), ...(isAdmin() && USERS.length ? t.assigned.map(id => (USERS.find(u => u.id === id) || {}).display_name || '¿?') : (t.assigned.includes(ME.id) ? ['Asignada a ti'] : []))].join(', ');
     return `<div class="zcard tcard" data-task="${t.id}"><div class="zi">${t.kind === 'tarifa' ? '💶' : '📋'}</div><div class="grow"><div class="zn">${esc(t.name)}</div>
       <div class="zs">${t.kind === 'tarifa' ? 'Cambio de tarifa' : 'Lista de etiquetas'} · ${d} de ${t.item_count} hechas · ${esc(who)}</div><div class="pbar"><div style="width:${pct}%"></div></div></div>
       ${d >= t.item_count ? '<span class="badge b-ok">✔ Terminada</span>' : '<span class="badge b-blue">Abrir</span>'}</div>`;
@@ -2071,7 +2174,7 @@ function renderTask(){
 $('#tvFilter').addEventListener('change', renderTask);
 $('#tvSearch').addEventListener('input', renderTask);
 function markDone(t, it, copies){
-  const p = {task_id:t.id, code:it.c, copies, done_by:ME.id, done_by_name:ME.display_name};
+  const p = {task_id:t.id, code:it.c, copies, done_by:ME.id, done_by_name:ME.display_name, store_name:myStoreName()};
   DONE.get(t.id)?.set(it.c, {code:it.c, done_by_name:ME.display_name, done_at:new Date().toISOString(), pending:true});
   L.outbox.push({t:'done', p}); changed(); flushOutbox();
 }
@@ -2145,7 +2248,9 @@ $('#newTaskBtn').addEventListener('click', async () => {
   $('#taskDlg').showModal(); updateTkKind();
   if (!USERS.length){ try{ USERS = (await fnCall({action:'list'})).users; }catch(e){} }
   $('#tkUsers').innerHTML = `<label><input type="checkbox" id="tkAll" checked> <b>Todos</b></label>` +
-    USERS.filter(u => u.active).map(u => `<label><input type="checkbox" class="tkU" value="${u.id}"> ${esc(u.display_name)}</label>`).join('');
+    (STORES.length ? `<div style="width:100%" class="small muted">Tiendas:</div>` + STORES.map(s => `<label><input type="checkbox" class="tkU tkS" value="${s.id}"> 🏬 ${esc(s.name)}</label>`).join('') : '') +
+    `<div style="width:100%" class="small muted">Personas:</div>` +
+    USERS.filter(u => u.active).map(u => `<label><input type="checkbox" class="tkU tkP" value="${u.id}"> ${esc(u.display_name)}${u.store_id ? ` <span class="small muted">(${esc(storeName(u.store_id))})</span>` : ''}</label>`).join('');
   $('#tkAll').addEventListener('change', e => { if (e.target.checked) document.querySelectorAll('.tkU').forEach(c => c.checked = false); });
   document.querySelectorAll('.tkU').forEach(c => c.addEventListener('change', () => { $('#tkAll').checked = ![...document.querySelectorAll('.tkU')].some(x => x.checked); }));
 });
@@ -2195,9 +2300,10 @@ $('#tkCreate').addEventListener('click', async () => {
   if (!items.length){ $('#tkErr').textContent = 'No hay códigos en la columna elegida.'; return; }
   if (kind === 'tarifa' && pc < 0 && !(CAT && CAT.hasPrice)){ $('#tkErr').textContent = 'Para un cambio de tarifa elige la columna de precio (o importa el catálogo con precio).'; return; }
   if (unknown && !confirm(`${unknown} código(s) no están en el catálogo: se imprimirán sin descripción. ¿Crear la tarea igualmente?`)) return;
-  const assigned = $('#tkAll').checked ? [] : [...document.querySelectorAll('.tkU:checked')].map(c => c.value);
+  const assigned = $('#tkAll').checked ? [] : [...document.querySelectorAll('.tkP:checked')].map(c => c.value);
+  const stores = $('#tkAll').checked ? [] : [...document.querySelectorAll('.tkS:checked')].map(c => c.value);
   $('#tkCreate').disabled = true;
-  const {error} = await SB.from('inv_label_tasks').insert({kind, name, assigned, items, item_count:items.length, with_price: kind === 'tarifa' ? true : $('#tkWithPrice').checked, created_by:ME.id, created_by_name:ME.display_name});
+  const {error} = await SB.from('inv_label_tasks').insert({kind, name, assigned, stores, items, item_count:items.length, with_price: kind === 'tarifa' ? true : $('#tkWithPrice').checked, created_by:ME.id, created_by_name:ME.display_name});
   $('#tkCreate').disabled = false;
   if (error){ $('#tkErr').textContent = 'No se ha podido crear: ' + error.message; return; }
   $('#taskDlg').close(); toast(`✔ Tarea «${name}» creada con ${items.length} productos`); loadTasks();
